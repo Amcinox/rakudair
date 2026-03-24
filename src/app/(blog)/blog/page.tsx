@@ -1,141 +1,204 @@
-import Link from "next/link";
-import Image from "next/image";
+import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { articles, categories } from "@/lib/db/schema";
-import { desc, eq } from "drizzle-orm";
-import { Badge } from "@/components/ui/badge";
+import { desc, eq, and, ilike, or } from "drizzle-orm";
+import {
+    FeaturedPost,
+    ArticleCard,
+    CategoryFilter,
+    SearchBar,
+    LoadMoreButton,
+} from "@/features/blog/components";
+
+const ARTICLES_PER_PAGE = 9;
 
 export const metadata = {
-    title: "Blog — Rakuda Air",
+    title: "ブログ — Rakudair",
     description:
-        "Explore Japan through our travel guides, cultural insights, and hidden gem recommendations.",
+        "砂漠の冒険、文化探訪、星空観測。世界中の旅の物語をお届けします。",
 };
 
-export default async function BlogPage() {
-    const posts = await db
+interface BlogPageProps {
+    searchParams: Promise<{ category?: string; q?: string }>;
+}
+
+export default async function BlogPage({ searchParams }: BlogPageProps) {
+    const { category, q } = await searchParams;
+
+    // Fetch categories for filter
+    const allCategories = await db
         .select({
-            id: articles.id,
-            title: articles.title,
+            id: categories.id,
+            name: categories.name,
+            slug: categories.slug,
+        })
+        .from(categories)
+        .orderBy(categories.sortOrder);
+
+    // Build query conditions
+    const conditions = [eq(articles.status, "published")];
+
+    if (category) {
+        const [cat] = await db
+            .select({ id: categories.id })
+            .from(categories)
+            .where(eq(categories.slug, category))
+            .limit(1);
+
+        if (cat) {
+            conditions.push(eq(articles.categoryId, cat.id));
+        }
+    }
+
+    if (q) {
+        conditions.push(
+            or(
+                ilike(articles.title, `%${q}%`),
+                ilike(articles.excerpt, `%${q}%`)
+            )!
+        );
+    }
+
+    // Fetch featured post (only when no filters active)
+    let featuredPost = null;
+    if (!category && !q) {
+        const [fp] = await db
+            .select({
+                slug: articles.slug,
+                title: articles.title,
+                excerpt: articles.excerpt,
+                coverImage: articles.coverImage,
+                publishedAt: articles.publishedAt,
+                readingTime: articles.readingTime,
+                categoryName: categories.name,
+                isFeatured: articles.isFeatured,
+            })
+            .from(articles)
+            .leftJoin(categories, eq(articles.categoryId, categories.id))
+            .where(and(eq(articles.status, "published"), eq(articles.isFeatured, true)))
+            .orderBy(desc(articles.publishedAt))
+            .limit(1);
+
+        featuredPost = fp ?? null;
+    }
+
+    // Fetch regular posts (excluding featured if present)
+    const allPosts = await db
+        .select({
             slug: articles.slug,
+            title: articles.title,
             excerpt: articles.excerpt,
             coverImage: articles.coverImage,
             publishedAt: articles.publishedAt,
             readingTime: articles.readingTime,
             categoryName: categories.name,
-            categorySlug: categories.slug,
             isFeatured: articles.isFeatured,
         })
         .from(articles)
         .leftJoin(categories, eq(articles.categoryId, categories.id))
-        .where(eq(articles.status, "published"))
+        .where(and(...conditions))
         .orderBy(desc(articles.publishedAt))
-        .limit(24);
+        .limit(ARTICLES_PER_PAGE + 1);
 
-    const featured = posts.filter((p) => p.isFeatured);
-    const regular = posts.filter((p) => !p.isFeatured);
+    // Filter out the featured post from the grid
+    const regularPosts = featuredPost
+        ? allPosts.filter((p) => p.slug !== featuredPost.slug)
+        : allPosts;
+
+    const displayPosts = regularPosts.slice(0, ARTICLES_PER_PAGE);
+    const hasMore = regularPosts.length > ARTICLES_PER_PAGE;
 
     return (
-        <main className="mx-auto max-w-6xl px-4 py-12">
-            <header className="mb-12 text-center">
-                <h1 className="text-4xl font-bold tracking-tight mb-2">Blog</h1>
-                <p className="text-neutral-500 text-lg max-w-xl mx-auto">
-                    Stories, guides, and insights from across Japan.
-                </p>
-            </header>
+        <main className="min-h-screen">
+            {/* Hero Section */}
+            <section className="pt-28 pb-12 md:pt-36 md:pb-16 bg-secondary">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4">
+                            ブログ
+                        </h1>
+                        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                            砂漠の冒険、文化探訪、星空観測。世界中の旅の物語をお届けします。
+                        </p>
+                    </div>
 
-            {/* Featured */}
-            {featured.length > 0 && (
-                <section className="mb-16">
-                    <div className="grid gap-6 md:grid-cols-2">
-                        {featured.map((post) => (
-                            <Link
-                                key={post.id}
-                                href={`/blog/${post.slug}`}
-                                className="group relative overflow-hidden rounded-2xl bg-neutral-900 aspect-[16/9]"
-                            >
-                                {post.coverImage && (
-                                    <Image
-                                        src={post.coverImage}
-                                        alt={post.title}
-                                        fill
-                                        className="object-cover opacity-70 group-hover:opacity-50 transition-opacity"
-                                    />
-                                )}
-                                <div className="absolute inset-0 flex flex-col justify-end p-6">
-                                    {post.categoryName && (
-                                        <Badge className="mb-2 w-fit bg-red-600 text-white">
-                                            {post.categoryName}
-                                        </Badge>
-                                    )}
-                                    <h2 className="text-2xl font-bold text-white mb-1">
-                                        {post.title}
-                                    </h2>
-                                    {post.excerpt && (
-                                        <p className="text-white/80 text-sm line-clamp-2">
-                                            {post.excerpt}
-                                        </p>
-                                    )}
-                                    <span className="text-white/60 text-xs mt-2">
-                                        {post.readingTime} min read
-                                    </span>
-                                </div>
-                            </Link>
-                        ))}
+                    {/* Search Bar */}
+                    <Suspense>
+                        <SearchBar />
+                    </Suspense>
+
+                    {/* Categories */}
+                    <Suspense>
+                        <CategoryFilter
+                            categories={allCategories}
+                            activeSlug={category}
+                        />
+                    </Suspense>
+                </div>
+            </section>
+
+            {/* Featured Post */}
+            {featuredPost && (
+                <section className="py-12 md:py-16">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h2 className="font-serif text-2xl font-bold text-foreground mb-8">
+                            注目の記事
+                        </h2>
+                        <FeaturedPost
+                            slug={featuredPost.slug}
+                            title={featuredPost.title}
+                            excerpt={featuredPost.excerpt}
+                            coverImage={featuredPost.coverImage}
+                            categoryName={featuredPost.categoryName}
+                            publishedAt={featuredPost.publishedAt}
+                            readingTime={featuredPost.readingTime}
+                        />
                     </div>
                 </section>
             )}
 
-            {/* Article grid */}
-            <section>
-                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                    {regular.map((post) => (
-                        <article key={post.id} className="group">
-                            <Link href={`/blog/${post.slug}`}>
-                                <div className="relative overflow-hidden rounded-xl aspect-[16/10] bg-neutral-100 mb-3">
-                                    {post.coverImage ? (
-                                        <Image
-                                            src={post.coverImage}
-                                            alt={post.title}
-                                            fill
-                                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                        />
-                                    ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center text-4xl text-neutral-300">
-                                            旅
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="space-y-1">
-                                    {post.categoryName && (
-                                        <span className="text-xs font-medium text-red-600 uppercase tracking-wider">
-                                            {post.categoryName}
-                                        </span>
-                                    )}
-                                    <h3 className="font-semibold text-lg leading-tight group-hover:text-red-700 transition-colors">
-                                        {post.title}
-                                    </h3>
-                                    {post.excerpt && (
-                                        <p className="text-neutral-500 text-sm line-clamp-2">
-                                            {post.excerpt}
-                                        </p>
-                                    )}
-                                    <p className="text-neutral-400 text-xs">
-                                        {post.readingTime} min read
-                                    </p>
-                                </div>
-                            </Link>
-                        </article>
-                    ))}
-                </div>
+            {/* All Posts Grid */}
+            <section className="py-12 md:py-16 bg-secondary">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="font-serif text-2xl font-bold text-foreground mb-8">
+                        {category || q ? "検索結果" : "すべての記事"}
+                    </h2>
 
-                {posts.length === 0 && (
-                    <div className="text-center py-24">
-                        <p className="text-4xl mb-4">旅</p>
-                        <p className="text-neutral-500">
-                            No articles published yet. Check back soon!
-                        </p>
-                    </div>
-                )}
+                    {displayPosts.length > 0 ? (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {displayPosts.map((post) => (
+                                    <ArticleCard
+                                        key={post.slug}
+                                        slug={post.slug}
+                                        title={post.title}
+                                        excerpt={post.excerpt}
+                                        coverImage={post.coverImage}
+                                        categoryName={post.categoryName}
+                                        publishedAt={post.publishedAt}
+                                        readingTime={post.readingTime}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Load More */}
+                            <LoadMoreButton
+                                initialOffset={ARTICLES_PER_PAGE}
+                                limit={ARTICLES_PER_PAGE}
+                                category={category}
+                                search={q}
+                                hasMore={hasMore}
+                            />
+                        </>
+                    ) : (
+                        <div className="text-center py-24">
+                            <p className="text-6xl mb-4">🏜️</p>
+                            <p className="text-muted-foreground text-lg">
+                                記事が見つかりませんでした。
+                            </p>
+                        </div>
+                    )}
+                </div>
             </section>
         </main>
     );

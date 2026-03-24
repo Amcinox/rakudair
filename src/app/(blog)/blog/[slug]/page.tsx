@@ -1,10 +1,19 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowLeft, Calendar, Clock } from "lucide-react";
 import { db } from "@/lib/db";
-import { articles, categories, seoMetadata, tags, articleTags } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import { Badge } from "@/components/ui/badge";
+import {
+    articles,
+    categories,
+    seoMetadata,
+    tags,
+    articleTags,
+} from "@/lib/db/schema";
+import { eq, and, desc, ne } from "drizzle-orm";
+import { SocialShare } from "@/features/blog/components/social-share";
+import { AuthorBox } from "@/features/blog/components/author-box";
+import { ArticleCard } from "@/features/blog/components/article-card";
 import type { Metadata } from "next";
 
 interface Props {
@@ -27,7 +36,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!article) return { title: "Not Found" };
 
-    // Get SEO metadata
     const [seo] = await db
         .select()
         .from(seoMetadata)
@@ -54,10 +62,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             type: "article",
         },
         twitter: {
-            card: (seo?.twitterCard as "summary" | "summary_large_image") ?? "summary_large_image",
+            card:
+                (seo?.twitterCard as "summary" | "summary_large_image") ??
+                "summary_large_image",
             title: seo?.twitterTitle ?? seo?.metaTitle ?? article.title,
             description:
-                seo?.twitterDescription ?? seo?.metaDescription ?? article.excerpt ?? "",
+                seo?.twitterDescription ??
+                seo?.metaDescription ??
+                article.excerpt ??
+                "",
         },
         ...(seo?.noIndex || seo?.noFollow
             ? {
@@ -89,6 +102,7 @@ export default async function ArticlePage({ params }: Props) {
             categoryId: articles.categoryId,
             categoryName: categories.name,
             categorySlug: categories.slug,
+            authorId: articles.authorId,
         })
         .from(articles)
         .leftJoin(categories, eq(articles.categoryId, categories.id))
@@ -116,6 +130,68 @@ export default async function ArticlePage({ params }: Props) {
         )
         .limit(1);
 
+    // Get related posts — same category, exclude current
+    const relatedPosts = article.categoryId
+        ? await db
+            .select({
+                slug: articles.slug,
+                title: articles.title,
+                coverImage: articles.coverImage,
+                categoryName: categories.name,
+                publishedAt: articles.publishedAt,
+                readingTime: articles.readingTime,
+                excerpt: articles.excerpt,
+            })
+            .from(articles)
+            .leftJoin(categories, eq(articles.categoryId, categories.id))
+            .where(
+                and(
+                    eq(articles.status, "published"),
+                    eq(articles.categoryId, article.categoryId),
+                    ne(articles.id, article.id)
+                )
+            )
+            .orderBy(desc(articles.publishedAt))
+            .limit(3)
+        : [];
+
+    // If not enough related posts from same category, fill with recent posts
+    let recommendedPosts = relatedPosts;
+    if (recommendedPosts.length < 3) {
+        const excludeSlugs = [
+            article.slug,
+            ...recommendedPosts.map((p) => p.slug),
+        ];
+        const morePosts = await db
+            .select({
+                slug: articles.slug,
+                title: articles.title,
+                coverImage: articles.coverImage,
+                categoryName: categories.name,
+                publishedAt: articles.publishedAt,
+                readingTime: articles.readingTime,
+                excerpt: articles.excerpt,
+            })
+            .from(articles)
+            .leftJoin(categories, eq(articles.categoryId, categories.id))
+            .where(eq(articles.status, "published"))
+            .orderBy(desc(articles.publishedAt))
+            .limit(3 - recommendedPosts.length + excludeSlugs.length);
+
+        const additional = morePosts.filter(
+            (p) => !excludeSlugs.includes(p.slug)
+        );
+        recommendedPosts = [...recommendedPosts, ...additional].slice(0, 3);
+    }
+
+    const formattedDate = article.publishedAt
+        ? article.publishedAt.toLocaleDateString("ja-JP", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        })
+        : null;
+
     const jsonLd = seo?.jsonLd ?? {
         "@context": "https://schema.org",
         "@type": "BlogPosting",
@@ -125,7 +201,7 @@ export default async function ArticlePage({ params }: Props) {
         datePublished: article.publishedAt?.toISOString(),
         publisher: {
             "@type": "Organization",
-            name: "Rakuda Air",
+            name: "Rakudair",
             url: "https://www.rakudair.com",
         },
     };
@@ -136,70 +212,157 @@ export default async function ArticlePage({ params }: Props) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
-            <article className="mx-auto max-w-3xl px-4 py-12">
-                {/* Header */}
-                <header className="mb-8 text-center">
-                    {article.categoryName && (
-                        <Link
-                            href={`/blog?category=${article.categorySlug}`}
-                            className="text-xs font-medium text-red-600 uppercase tracking-wider mb-2 inline-block hover:underline"
-                        >
-                            {article.categoryName}
-                        </Link>
-                    )}
-                    <h1 className="text-4xl font-bold tracking-tight mb-4 leading-tight">
-                        {article.title}
-                    </h1>
-                    {article.excerpt && (
-                        <p className="text-lg text-neutral-500 max-w-xl mx-auto">
-                            {article.excerpt}
-                        </p>
-                    )}
-                    <div className="flex items-center justify-center gap-3 mt-4 text-sm text-neutral-400">
-                        {article.publishedAt && (
-                            <time dateTime={article.publishedAt.toISOString()}>
-                                {article.publishedAt.toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "long",
-                                    day: "numeric",
-                                })}
-                            </time>
+
+            <main className="min-h-screen">
+                {/* Hero Section */}
+                <section className="relative pt-20">
+                    <div className="relative h-[50vh] md:h-[70vh]">
+                        {article.coverImage ? (
+                            <Image
+                                src={article.coverImage}
+                                alt={article.title}
+                                fill
+                                className="object-cover"
+                                priority
+                            />
+                        ) : (
+                            <div className="absolute inset-0 bg-secondary flex items-center justify-center">
+                                <span className="text-[12rem] text-muted-foreground/20">
+                                    旅
+                                </span>
+                            </div>
                         )}
-                        <span>·</span>
-                        <span>{article.readingTime} min read</span>
+                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                     </div>
-                </header>
 
-                {/* Cover Image */}
-                {article.coverImage && (
-                    <div className="relative aspect-[16/9] overflow-hidden rounded-2xl mb-10">
-                        <Image
-                            src={article.coverImage}
-                            alt={article.title}
-                            fill
-                            className="object-cover"
-                            priority
-                        />
+                    <div className="absolute bottom-0 left-0 right-0">
+                        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 md:pb-12">
+                            <Link
+                                href="/blog"
+                                className="inline-flex items-center gap-2 text-foreground/80 hover:text-primary mb-6 transition-colors"
+                            >
+                                <ArrowLeft className="w-5 h-5" />
+                                <span>ブログに戻る</span>
+                            </Link>
+
+                            {article.categoryName && (
+                                <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                                    {article.categoryName}
+                                </span>
+                            )}
+
+                            <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 text-balance">
+                                {article.title}
+                            </h1>
+
+                            {article.excerpt && (
+                                <p className="text-lg md:text-xl text-muted-foreground mb-6">
+                                    {article.excerpt}
+                                </p>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20">
+                                        <Image
+                                            src="/logo.jpg"
+                                            alt="Rakudair"
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-foreground">Rakudair</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            トラベルライター
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                    {formattedDate && (
+                                        <span className="flex items-center gap-1.5">
+                                            <Calendar className="w-4 h-4" />
+                                            {formattedDate}
+                                        </span>
+                                    )}
+                                    {article.readingTime && (
+                                        <span className="flex items-center gap-1.5">
+                                            <Clock className="w-4 h-4" />
+                                            {article.readingTime}分
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </section>
+
+                {/* Article Content */}
+                <section className="py-12 md:py-16">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex gap-8">
+                            {/* Social Share Sidebar */}
+                            <SocialShare title={article.title} />
+
+                            {/* Main Content */}
+                            <article className="flex-1 min-w-0">
+                                <div
+                                    className="prose prose-lg max-w-none prose-headings:font-serif prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl"
+                                    dangerouslySetInnerHTML={{
+                                        __html: article.contentHtml ?? "",
+                                    }}
+                                />
+
+                                {/* Tags */}
+                                {articleTagList.length > 0 && (
+                                    <div className="mt-10 pt-6 border-t border-border flex flex-wrap gap-2">
+                                        {articleTagList.map((tag) => (
+                                            <span
+                                                key={tag.slug}
+                                                className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm"
+                                            >
+                                                {tag.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Author Box */}
+                                <AuthorBox
+                                    name="Rakudair"
+                                    bio="世界中の砂漠を旅し、その美しさと文化を記録しています。カメラを片手に、次の冒険へ。"
+                                    avatar="/logo.jpg"
+                                />
+                            </article>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Related Posts */}
+                {recommendedPosts.length > 0 && (
+                    <section className="py-12 md:py-16 bg-secondary">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <h2 className="font-serif text-2xl md:text-3xl font-bold text-foreground mb-8">
+                                関連記事
+                            </h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {recommendedPosts.map((post) => (
+                                    <ArticleCard
+                                        key={post.slug}
+                                        slug={post.slug}
+                                        title={post.title}
+                                        coverImage={post.coverImage}
+                                        categoryName={post.categoryName}
+                                        variant="minimal"
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </section>
                 )}
-
-                {/* Content */}
-                <div
-                    className="prose prose-lg prose-neutral mx-auto prose-headings:font-bold prose-a:text-red-700 prose-img:rounded-xl"
-                    dangerouslySetInnerHTML={{ __html: article.contentHtml ?? "" }}
-                />
-
-                {/* Tags */}
-                {articleTagList.length > 0 && (
-                    <div className="mt-10 pt-6 border-t flex flex-wrap gap-2">
-                        {articleTagList.map((tag) => (
-                            <Badge key={tag.slug} variant="secondary">
-                                {tag.name}
-                            </Badge>
-                        ))}
-                    </div>
-                )}
-            </article>
+            </main>
         </>
     );
 }

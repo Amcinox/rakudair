@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Bebas_Neue } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Bebas_Neue, Noto_Sans_JP, Noto_Serif_JP } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -9,6 +9,10 @@ import { cn } from "@/lib/utils";
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-display" });
+
+const notoSansJP = Noto_Sans_JP({ subsets: ['latin'], variable: '--font-noto-sans' });
+
+const notoSerifJP = Noto_Serif_JP({ weight: ['400', '700'], subsets: ['latin'], variable: '--font-noto-serif' });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -106,7 +110,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable, bebasNeue.variable)}
+      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable, bebasNeue.variable, notoSansJP.variable, notoSerifJP.variable)}
     >
       <body className="min-h-full flex flex-col">
         <ClerkProvider>

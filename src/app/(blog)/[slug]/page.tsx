@@ -60,18 +60,24 @@ export default async function StaticPage({ params }: Props) {
     if (!page) notFound();
 
     return (
-        <main
-            className={
-                page.template === "full-width"
-                    ? "px-4 py-12"
-                    : "mx-auto max-w-3xl px-4 py-12"
-            }
-        >
-            <h1 className="text-4xl font-bold tracking-tight mb-8">{page.title}</h1>
-            <div
-                className="prose prose-lg prose-neutral mx-auto prose-headings:font-bold prose-a:text-red-700 prose-img:rounded-xl"
-                dangerouslySetInnerHTML={{ __html: page.contentHtml ?? "" }}
-            />
+        <main className="min-h-screen pt-20">
+            <section className="py-12 md:py-16">
+                <div
+                    className={
+                        page.template === "full-width"
+                            ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+                            : "max-w-3xl mx-auto px-4 sm:px-6 lg:px-8"
+                    }
+                >
+                    <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-8">
+                        {page.title}
+                    </h1>
+                    <div
+                        className="prose prose-lg max-w-none prose-headings:font-serif prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl"
+                        dangerouslySetInnerHTML={{ __html: page.contentHtml ?? "" }}
+                    />
+                </div>
+            </section>
         </main>
     );
 }
