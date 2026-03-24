@@ -13,6 +13,7 @@ import {
     TabsTrigger,
 } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { ImagePicker } from "@/components/dashboard/image-picker";
 
 // Default landing page content (matches page.tsx defaults)
 const defaultLanding = {
@@ -72,8 +73,21 @@ export default function SettingsPage() {
         socialTwitter: "",
         socialInstagram: "",
         socialYoutube: "",
+        socialFacebook: "",
+        socialTiktok: "",
         postsPerPage: "12",
         analyticsId: "",
+        // Header & Footer
+        headerCtaText: "購読する",
+        headerCtaLink: "/blog",
+        footerNavHeading: "探索する",
+        footerLegalHeading: "会社情報",
+        footerNewsletterHeading: "ニュースレター",
+        footerNewsletterDescription: "最新の旅行記や特別コンテンツを受け取る",
+        footerLegalLinks: JSON.stringify([
+            { label: "プライバシーポリシー", url: "/privacy" },
+            { label: "利用規約", url: "/terms" },
+        ]),
     });
 
     const [landing, setLanding] = useState(defaultLanding);
@@ -94,8 +108,21 @@ export default function SettingsPage() {
                     socialTwitter: (data.socialTwitter as string) ?? "",
                     socialInstagram: (data.socialInstagram as string) ?? "",
                     socialYoutube: (data.socialYoutube as string) ?? "",
+                    socialFacebook: (data.socialFacebook as string) ?? "",
+                    socialTiktok: (data.socialTiktok as string) ?? "",
                     postsPerPage: String(data.postsPerPage ?? "12"),
                     analyticsId: (data.analyticsId as string) ?? "",
+                    headerCtaText: (data.headerCtaText as string) ?? f.headerCtaText,
+                    headerCtaLink: (data.headerCtaLink as string) ?? f.headerCtaLink,
+                    footerNavHeading: (data.footerNavHeading as string) ?? f.footerNavHeading,
+                    footerLegalHeading: (data.footerLegalHeading as string) ?? f.footerLegalHeading,
+                    footerNewsletterHeading: (data.footerNewsletterHeading as string) ?? f.footerNewsletterHeading,
+                    footerNewsletterDescription: (data.footerNewsletterDescription as string) ?? f.footerNewsletterDescription,
+                    footerLegalLinks: typeof data.footerLegalLinks === "string"
+                        ? data.footerLegalLinks as string
+                        : data.footerLegalLinks
+                            ? JSON.stringify(data.footerLegalLinks)
+                            : f.footerLegalLinks,
                 }));
                 // Load landing page content
                 if (data.landingPage && typeof data.landingPage === "object") {
@@ -123,7 +150,13 @@ export default function SettingsPage() {
         setSaving(true);
 
         const batch = [
-            ...Object.entries(form).map(([key, value]) => ({ key, value })),
+            ...Object.entries(form)
+                .filter(([key]) => key !== "footerLegalLinks")
+                .map(([key, value]) => ({ key, value })),
+            {
+                key: "footerLegalLinks",
+                value: (() => { try { return JSON.parse(form.footerLegalLinks); } catch { return []; } })(),
+            },
             { key: "landingPage", value: landing },
         ];
 
@@ -252,6 +285,7 @@ export default function SettingsPage() {
                 <TabsList className="mb-4">
                     <TabsTrigger value="general">General</TabsTrigger>
                     <TabsTrigger value="social">Social</TabsTrigger>
+                    <TabsTrigger value="header-footer">Header & Footer</TabsTrigger>
                     <TabsTrigger value="landing">Landing Page</TabsTrigger>
                     <TabsTrigger value="advanced">Advanced</TabsTrigger>
                 </TabsList>
@@ -294,19 +328,19 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Logo URL</Label>
+                                <Label>Contact Email</Label>
                                 <Input
-                                    value={form.logoUrl}
-                                    onChange={(e) => setForm((f) => ({ ...f, logoUrl: e.target.value }))}
-                                    placeholder="/logo.jpg"
+                                    value={form.contactEmail}
+                                    onChange={(e) => setForm((f) => ({ ...f, contactEmail: e.target.value }))}
                                 />
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label>Contact Email</Label>
-                            <Input
-                                value={form.contactEmail}
-                                onChange={(e) => setForm((f) => ({ ...f, contactEmail: e.target.value }))}
+                            <Label>Logo</Label>
+                            <ImagePicker
+                                value={form.logoUrl}
+                                onChange={(url) => setForm((f) => ({ ...f, logoUrl: url }))}
+                                placeholder="/logo.jpg"
                             />
                         </div>
                     </div>
@@ -317,30 +351,128 @@ export default function SettingsPage() {
                     <div className="dash-card rounded-lg p-6 space-y-4">
                         <h3 className="font-semibold">Social Media Links</h3>
                         <p className="text-sm text-muted-foreground">These links appear in the footer. Leave empty to hide.</p>
-                        <div className="space-y-2">
-                            <Label>Twitter / X</Label>
-                            <Input
-                                value={form.socialTwitter}
-                                onChange={(e) => setForm((f) => ({ ...f, socialTwitter: e.target.value }))}
-                                placeholder="https://twitter.com/..."
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Twitter / X</Label>
+                                <Input
+                                    value={form.socialTwitter}
+                                    onChange={(e) => setForm((f) => ({ ...f, socialTwitter: e.target.value }))}
+                                    placeholder="https://twitter.com/..."
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Instagram</Label>
+                                <Input
+                                    value={form.socialInstagram}
+                                    onChange={(e) => setForm((f) => ({ ...f, socialInstagram: e.target.value }))}
+                                    placeholder="https://instagram.com/..."
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>YouTube</Label>
+                                <Input
+                                    value={form.socialYoutube}
+                                    onChange={(e) => setForm((f) => ({ ...f, socialYoutube: e.target.value }))}
+                                    placeholder="https://youtube.com/..."
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Facebook</Label>
+                                <Input
+                                    value={form.socialFacebook}
+                                    onChange={(e) => setForm((f) => ({ ...f, socialFacebook: e.target.value }))}
+                                    placeholder="https://facebook.com/..."
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>TikTok</Label>
+                                <Input
+                                    value={form.socialTiktok}
+                                    onChange={(e) => setForm((f) => ({ ...f, socialTiktok: e.target.value }))}
+                                    placeholder="https://tiktok.com/..."
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </TabsContent>
+
+                {/* =============== Header & Footer Tab =============== */}
+                <TabsContent value="header-footer" className="space-y-6">
+                    <div className="dash-card rounded-lg p-6 space-y-4">
+                        <h3 className="font-semibold">Header CTA Button</h3>
+                        <p className="text-sm text-muted-foreground">Configure the call-to-action button shown in the site header.</p>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Button Text</Label>
+                                <Input
+                                    value={form.headerCtaText}
+                                    onChange={(e) => setForm((f) => ({ ...f, headerCtaText: e.target.value }))}
+                                    placeholder="購読する"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Button Link</Label>
+                                <Input
+                                    value={form.headerCtaLink}
+                                    onChange={(e) => setForm((f) => ({ ...f, headerCtaLink: e.target.value }))}
+                                    placeholder="/blog"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="dash-card rounded-lg p-6 space-y-4">
+                        <h3 className="font-semibold">Footer Columns</h3>
+                        <p className="text-sm text-muted-foreground">Customize the footer column headings and content. Navigation links come from the Navigation page.</p>
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <Label>Navigation Column Heading</Label>
+                                <Input
+                                    value={form.footerNavHeading}
+                                    onChange={(e) => setForm((f) => ({ ...f, footerNavHeading: e.target.value }))}
+                                    placeholder="探索する"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Legal Column Heading</Label>
+                                <Input
+                                    value={form.footerLegalHeading}
+                                    onChange={(e) => setForm((f) => ({ ...f, footerLegalHeading: e.target.value }))}
+                                    placeholder="会社情報"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Newsletter Column Heading</Label>
+                                <Input
+                                    value={form.footerNewsletterHeading}
+                                    onChange={(e) => setForm((f) => ({ ...f, footerNewsletterHeading: e.target.value }))}
+                                    placeholder="ニュースレター"
+                                />
+                            </div>
                         </div>
                         <div className="space-y-2">
-                            <Label>Instagram</Label>
+                            <Label>Newsletter Description</Label>
                             <Input
-                                value={form.socialInstagram}
-                                onChange={(e) => setForm((f) => ({ ...f, socialInstagram: e.target.value }))}
-                                placeholder="https://instagram.com/..."
+                                value={form.footerNewsletterDescription}
+                                onChange={(e) => setForm((f) => ({ ...f, footerNewsletterDescription: e.target.value }))}
+                                placeholder="最新の旅行記や特別コンテンツを受け取る"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label>YouTube</Label>
-                            <Input
-                                value={form.socialYoutube}
-                                onChange={(e) => setForm((f) => ({ ...f, socialYoutube: e.target.value }))}
-                                placeholder="https://youtube.com/..."
-                            />
-                        </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="dash-card rounded-lg p-6 space-y-4">
+                        <h3 className="font-semibold">Legal Links</h3>
+                        <p className="text-sm text-muted-foreground">JSON array of legal links shown in the footer. Format: [{`{"label":"…","url":"…"}`}]</p>
+                        <Textarea
+                            value={form.footerLegalLinks}
+                            onChange={(e) => setForm((f) => ({ ...f, footerLegalLinks: e.target.value }))}
+                            rows={4}
+                            className="font-mono text-sm"
+                        />
                     </div>
                 </TabsContent>
 
@@ -355,9 +487,17 @@ export default function SettingsPage() {
                                 <Input value={landing.hero.badgeText} onChange={(e) => updateHero("badgeText", e.target.value)} />
                             </div>
                             <div className="space-y-2">
-                                <Label>Hero Image URL</Label>
-                                <Input value={landing.hero.heroImage} onChange={(e) => updateHero("heroImage", e.target.value)} />
+                                <Label>Hero Image Alt</Label>
+                                <Input value={landing.hero.heroImageAlt} onChange={(e) => updateHero("heroImageAlt", e.target.value)} placeholder="Image alt text" />
                             </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Hero Image</Label>
+                            <ImagePicker
+                                value={landing.hero.heroImage}
+                                onChange={(url) => updateHero("heroImage", url)}
+                                placeholder="/hero-desert.jpg"
+                            />
                         </div>
                         <div className="space-y-2">
                             <Label>Title (before highlight)</Label>

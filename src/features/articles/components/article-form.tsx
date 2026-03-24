@@ -268,7 +268,7 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
 
             toast.success(isEdit ? "Article updated" : "Article created");
             if (!isEdit) {
-                router.push(`/dashboard/articles/${json.data.id}/edit`);
+                router.push("/dashboard/articles");
             }
         } catch (e) {
             toast.error(e instanceof Error ? e.message : "Failed to save");
@@ -294,7 +294,7 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Article title"
-                            className="text-2xl font-bold h-14 bg-transparent border-none shadow-none focus-visible:ring-0 px-1 placeholder:text-muted-foreground/40"
+                            className="text-2xl font-bold h-14 px-3 placeholder:text-muted-foreground/40"
                             style={{ fontFamily: "var(--font-display)", letterSpacing: "0.02em" }}
                         />
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -309,6 +309,13 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                                 className="h-7 text-sm border-dashed border-border/50 bg-transparent"
                             />
                         </div>
+                        <Textarea
+                            value={excerpt}
+                            onChange={(e) => setExcerpt(e.target.value)}
+                            placeholder="Short summary for cards and SEO"
+                            rows={2}
+                            className="text-sm mt-1"
+                        />
                     </div>
 
                     {contentLoaded && (
@@ -456,17 +463,6 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                             value={coverImage}
                             onChange={setCoverImage}
                             placeholder="No cover image selected"
-                        />
-                    </div>
-
-                    {/* Excerpt */}
-                    <div className="dash-card rounded-lg p-4 space-y-3">
-                        <h3 className="font-semibold text-sm gold-text">Excerpt</h3>
-                        <Textarea
-                            value={excerpt}
-                            onChange={(e) => setExcerpt(e.target.value)}
-                            placeholder="Short summary for cards and SEO"
-                            rows={3}
                         />
                     </div>
 
