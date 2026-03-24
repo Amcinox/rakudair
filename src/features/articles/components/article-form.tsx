@@ -28,7 +28,7 @@ const Editor = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="h-[500px] animate-pulse rounded-lg border bg-neutral-100" />
+            <div className="h-[500px] animate-pulse rounded-lg border bg-muted" />
         ),
     },
 );
@@ -275,7 +275,7 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
     }
 
     if (loading) {
-        return <div className="h-[600px] animate-pulse rounded-lg bg-neutral-100" />;
+        return <div className="h-[600px] animate-pulse rounded-lg bg-muted" />;
     }
 
     const seoTitlePlaceholder = title || "Article title";
@@ -285,14 +285,15 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
             {/* Main editor area */}
             <div className="space-y-4">
-                <div className="space-y-2">
+                <div className="dash-card rounded-lg p-4 space-y-2">
                     <Input
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="Article title"
-                        className="text-2xl font-bold h-14 border-none shadow-none focus-visible:ring-0 px-0"
+                        className="text-2xl font-bold h-14 bg-transparent border-none shadow-none focus-visible:ring-0 px-1 placeholder:text-muted-foreground/40"
+                        style={{ fontFamily: "var(--font-display)", letterSpacing: "0.02em" }}
                     />
-                    <div className="flex items-center gap-2 text-sm text-neutral-500">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span className="shrink-0">Slug:</span>
                         <Input
                             value={slug}
@@ -301,7 +302,7 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                                 setSlug(slugify(e.target.value, { lower: true, strict: true }));
                             }}
                             placeholder="auto-generated-slug"
-                            className="h-7 text-sm border-dashed"
+                            className="h-7 text-sm border-dashed border-border/50 bg-transparent"
                         />
                     </div>
                 </div>
@@ -316,8 +317,8 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
             {/* Right sidebar */}
             <div className="space-y-6">
                 {/* Publish panel */}
-                <div className="rounded-lg border bg-white p-4 dark:bg-neutral-950 space-y-4">
-                    <h3 className="font-semibold text-sm">Status & Publish</h3>
+                <div className="dash-card rounded-lg p-4 space-y-4">
+                    <h3 className="font-semibold text-sm gold-text">Status & Publish</h3>
                     <Select value={status} onValueChange={setStatus}>
                         <SelectTrigger>
                             <SelectValue />
@@ -341,7 +342,7 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                         <Button
                             onClick={() => handleSave("published")}
                             disabled={saving}
-                            className="flex-1"
+                            className="flex-1 btn-gold"
                         >
                             Publish
                         </Button>
@@ -349,8 +350,8 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                 </div>
 
                 {/* Category */}
-                <div className="rounded-lg border bg-white p-4 dark:bg-neutral-950 space-y-3">
-                    <h3 className="font-semibold text-sm">Category</h3>
+                <div className="dash-card rounded-lg p-4 space-y-3">
+                    <h3 className="font-semibold text-sm gold-text">Category</h3>
                     <Select value={categoryId} onValueChange={setCategoryId}>
                         <SelectTrigger>
                             <SelectValue placeholder="Select category" />
@@ -366,15 +367,15 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                 </div>
 
                 {/* Tags — WordPress-style chip input */}
-                <div className="rounded-lg border bg-white p-4 dark:bg-neutral-950 space-y-3">
-                    <h3 className="font-semibold text-sm">Tags</h3>
+                <div className="dash-card rounded-lg p-4 space-y-3">
+                    <h3 className="font-semibold text-sm gold-text">Tags</h3>
                     {selectedTags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
                             {selectedTags.map((tag) => (
                                 <Badge
                                     key={tag.id}
                                     variant="secondary"
-                                    className="gap-1 pl-2.5 pr-1 py-0.5 text-xs cursor-pointer hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-colors"
+                                    className="gap-1 pl-2.5 pr-1 py-0.5 text-xs cursor-pointer hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors"
                                     onClick={() => removeTag(tag.id)}
                                 >
                                     {tag.name}
@@ -398,14 +399,14 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                             className="h-8 text-sm"
                         />
                         {showSuggestions && (tagSuggestions.length > 0 || tagInput.trim()) && (
-                            <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-md border bg-white dark:bg-neutral-950 shadow-lg max-h-48 overflow-y-auto">
+                            <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-md border bg-card shadow-lg max-h-48 overflow-y-auto">
                                 {tagSuggestions.map((tag) => (
                                     <button
                                         key={tag.id}
                                         type="button"
                                         onMouseDown={(e) => e.preventDefault()}
                                         onClick={() => addTag(tag)}
-                                        className="w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                        className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted dark:hover:bg-neutral-800 transition-colors"
                                     >
                                         {tag.name}
                                     </button>
@@ -418,7 +419,7 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                                             type="button"
                                             onMouseDown={(e) => e.preventDefault()}
                                             onClick={() => createAndAddTag(tagInput.trim())}
-                                            className="w-full text-left px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
+                                            className="w-full text-left px-3 py-1.5 text-sm text-primary hover:bg-primary/10 transition-colors"
                                         >
                                             + Create &quot;{tagInput.trim()}&quot;
                                         </button>
@@ -426,14 +427,14 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                             </div>
                         )}
                     </div>
-                    <p className="text-[11px] text-neutral-400">
+                    <p className="text-[11px] text-muted-foreground">
                         Type and press Enter to add. New tags are created automatically.
                     </p>
                 </div>
 
                 {/* Cover Image */}
-                <div className="rounded-lg border bg-white p-4 dark:bg-neutral-950 space-y-3">
-                    <h3 className="font-semibold text-sm">Cover Image</h3>
+                <div className="dash-card rounded-lg p-4 space-y-3">
+                    <h3 className="font-semibold text-sm gold-text">Cover Image</h3>
                     <Input
                         value={coverImage}
                         onChange={(e) => setCoverImage(e.target.value)}
@@ -442,8 +443,8 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                 </div>
 
                 {/* Excerpt */}
-                <div className="rounded-lg border bg-white p-4 dark:bg-neutral-950 space-y-3">
-                    <h3 className="font-semibold text-sm">Excerpt</h3>
+                <div className="dash-card rounded-lg p-4 space-y-3">
+                    <h3 className="font-semibold text-sm gold-text">Excerpt</h3>
                     <Textarea
                         value={excerpt}
                         onChange={(e) => setExcerpt(e.target.value)}
@@ -453,7 +454,7 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                 </div>
 
                 {/* Settings + SEO tabs */}
-                <div className="rounded-lg border bg-white dark:bg-neutral-950">
+                <div className="dash-card rounded-lg">
                     <Tabs defaultValue="settings">
                         <TabsList className="w-full grid grid-cols-2 rounded-b-none">
                             <TabsTrigger value="settings" className="text-xs">Settings</TabsTrigger>
@@ -477,18 +478,18 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                             </div>
                         </TabsContent>
                         <TabsContent value="seo" className="p-4 space-y-4">
-                            <p className="text-[11px] text-neutral-400">
+                            <p className="text-[11px] text-muted-foreground">
                                 SEO fields auto-fill from the article. Override below if needed.
                             </p>
                             <div className="space-y-2">
                                 <Label className="text-xs">Meta Title</Label>
                                 <Input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder={seoTitlePlaceholder} className="h-8 text-sm" />
-                                <span className="text-[10px] text-neutral-400">{(seoTitle || title).length}/60</span>
+                                <span className="text-[10px] text-muted-foreground">{(seoTitle || title).length}/60</span>
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-xs">Meta Description</Label>
                                 <Textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} placeholder={seoDescPlaceholder} rows={2} className="text-sm" />
-                                <span className="text-[10px] text-neutral-400">{(seoDescription || excerpt).length}/160</span>
+                                <span className="text-[10px] text-muted-foreground">{(seoDescription || excerpt).length}/160</span>
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-xs">Keywords</Label>

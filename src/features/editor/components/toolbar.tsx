@@ -25,8 +25,8 @@ function ToolbarButton({
             onClick={onClick}
             title={title}
             className={cn(
-                "rounded p-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors",
-                isActive && "bg-neutral-200 dark:bg-neutral-700",
+                "rounded p-1.5 text-sm hover:bg-muted transition-colors",
+                isActive && "bg-accent text-accent-foreground",
             )}
         >
             {children}

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { SneakerIllustration } from "@/components/dashboard/illustrations";
 import { Badge } from "@/components/ui/badge";
 import {
     Select,
@@ -42,9 +43,9 @@ type NavItem = {
 };
 
 const positionColors: Record<string, string> = {
-    header: "bg-blue-100 text-blue-700",
+    header: "badge-scheduled",
     footer: "bg-purple-100 text-purple-700",
-    social: "bg-green-100 text-green-700",
+    social: "badge-published",
 };
 
 export default function NavigationPage() {
@@ -158,12 +159,12 @@ export default function NavigationPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Navigation</h2>
-                    <p className="text-neutral-500">
+                    <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Navigation</h2>
+                    <p className="text-muted-foreground">
                         Manage header, footer, and social navigation links.
                     </p>
                 </div>
-                <Button onClick={openCreate}>Add Link</Button>
+                <Button onClick={openCreate} className="btn-gold">Add Link</Button>
             </div>
 
             <div className="flex items-center gap-4">
@@ -180,7 +181,7 @@ export default function NavigationPage() {
                 </Select>
             </div>
 
-            <div className="rounded-md border bg-white dark:bg-neutral-950">
+            <div className="dash-card rounded-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -203,19 +204,23 @@ export default function NavigationPage() {
                             <TableRow>
                                 <TableCell
                                     colSpan={6}
-                                    className="text-center py-8 text-neutral-500"
+                                    className="text-center py-12 text-muted-foreground"
                                 >
-                                    No navigation items.
+                                    <div className="flex flex-col items-center gap-2">
+                                        <SneakerIllustration className="w-28 h-20 opacity-70" />
+                                        <p className="font-medium">No navigation items.</p>
+                                        <p className="text-sm">Set the path — add a link!</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
                             items.map((item) => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="text-neutral-500">
+                                    <TableCell className="text-muted-foreground">
                                         {item.sortOrder}
                                     </TableCell>
                                     <TableCell className="font-medium">{item.label}</TableCell>
-                                    <TableCell className="text-neutral-500 text-sm max-w-[200px] truncate">
+                                    <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
                                         {item.url}
                                     </TableCell>
                                     <TableCell>
@@ -244,7 +249,7 @@ export default function NavigationPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="text-red-600 hover:text-red-700"
+                                                className="text-destructive hover:text-destructive/80"
                                                 onClick={() => handleDelete(item.id)}
                                             >
                                                 Delete

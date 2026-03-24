@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { HeadphonesIllustration } from "@/components/dashboard/illustrations";
 import { Badge } from "@/components/ui/badge";
 import {
     Select,
@@ -75,12 +76,12 @@ export default function PagesPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Pages</h2>
-                    <p className="text-neutral-500">
+                    <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Pages</h2>
+                    <p className="text-muted-foreground">
                         {total} page{total !== 1 ? "s" : ""} total
                     </p>
                 </div>
-                <Button asChild>
+                <Button asChild className="btn-gold">
                     <Link href="/dashboard/pages/new">New Page</Link>
                 </Button>
             </div>
@@ -105,7 +106,7 @@ export default function PagesPage() {
                 </Select>
             </div>
 
-            <div className="rounded-md border bg-white dark:bg-neutral-950">
+            <div className="dash-card rounded-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -128,9 +129,13 @@ export default function PagesPage() {
                             <TableRow>
                                 <TableCell
                                     colSpan={6}
-                                    className="text-center py-8 text-neutral-500"
+                                    className="text-center py-12 text-muted-foreground"
                                 >
-                                    No pages found.
+                                    <div className="flex flex-col items-center gap-2">
+                                        <HeadphonesIllustration className="w-24 h-24 opacity-70" />
+                                        <p className="font-medium">No pages found.</p>
+                                        <p className="text-sm">Nothing playing yet — create one!</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -144,15 +149,15 @@ export default function PagesPage() {
                                             {pg.title}
                                         </Link>
                                     </TableCell>
-                                    <TableCell className="text-neutral-500 text-sm">
+                                    <TableCell className="text-muted-foreground text-sm">
                                         {pg.template}
                                     </TableCell>
                                     <TableCell>
                                         <Badge
                                             className={
                                                 pg.status === "published"
-                                                    ? "bg-green-100 text-green-700"
-                                                    : "bg-neutral-100 text-neutral-700"
+                                                    ? "badge-published"
+                                                    : "bg-muted text-foreground"
                                             }
                                             variant="secondary"
                                         >
@@ -166,7 +171,7 @@ export default function PagesPage() {
                                             </Badge>
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-neutral-500 text-sm">
+                                    <TableCell className="text-muted-foreground text-sm">
                                         {formatDistanceToNow(new Date(pg.updatedAt), {
                                             addSuffix: true,
                                         })}
@@ -181,7 +186,7 @@ export default function PagesPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="text-red-600 hover:text-red-700"
+                                                className="text-destructive hover:text-destructive/80"
                                                 onClick={() => handleDelete(pg.id)}
                                             >
                                                 Delete
@@ -205,7 +210,7 @@ export default function PagesPage() {
                     >
                         Previous
                     </Button>
-                    <span className="text-sm text-neutral-500">
+                    <span className="text-sm text-muted-foreground">
                         Page {page} of {Math.ceil(total / 20)}
                     </span>
                     <Button

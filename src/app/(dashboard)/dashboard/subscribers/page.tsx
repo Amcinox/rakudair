@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { HeadphonesIllustration } from "@/components/dashboard/illustrations";
 import {
     Select,
     SelectContent,
@@ -101,8 +102,8 @@ export default function SubscribersPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Subscribers</h2>
-                    <p className="text-neutral-500">
+                    <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Subscribers</h2>
+                    <p className="text-muted-foreground">
                         {total} subscriber{total !== 1 ? "s" : ""}
                     </p>
                 </div>
@@ -124,7 +125,7 @@ export default function SubscribersPage() {
                 </Select>
             </div>
 
-            <div className="rounded-md border bg-white dark:bg-neutral-950">
+            <div className="dash-card rounded-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -146,16 +147,20 @@ export default function SubscribersPage() {
                             <TableRow>
                                 <TableCell
                                     colSpan={5}
-                                    className="text-center py-8 text-neutral-500"
+                                    className="text-center py-12 text-muted-foreground"
                                 >
-                                    No subscribers found.
+                                    <div className="flex flex-col items-center gap-2">
+                                        <HeadphonesIllustration className="w-24 h-24 opacity-70" />
+                                        <p className="font-medium">No subscribers found.</p>
+                                        <p className="text-sm">Your audience is on the way!</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
                             subs.map((sub) => (
                                 <TableRow key={sub.id}>
                                     <TableCell className="font-medium">{sub.email}</TableCell>
-                                    <TableCell className="text-neutral-500">
+                                    <TableCell className="text-muted-foreground">
                                         {sub.name ?? "—"}
                                     </TableCell>
                                     <TableCell>
@@ -163,14 +168,14 @@ export default function SubscribersPage() {
                                             variant="secondary"
                                             className={
                                                 sub.status === "active"
-                                                    ? "bg-green-100 text-green-700"
-                                                    : "bg-neutral-100 text-neutral-700"
+                                                    ? "badge-published"
+                                                    : "bg-muted text-foreground"
                                             }
                                         >
                                             {sub.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-neutral-500 text-sm">
+                                    <TableCell className="text-muted-foreground text-sm">
                                         {formatDistanceToNow(new Date(sub.subscribedAt), {
                                             addSuffix: true,
                                         })}
@@ -189,7 +194,7 @@ export default function SubscribersPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="text-red-600 hover:text-red-700"
+                                                className="text-destructive hover:text-destructive/80"
                                                 onClick={() => handleDelete(sub.id)}
                                             >
                                                 Delete
@@ -213,7 +218,7 @@ export default function SubscribersPage() {
                     >
                         Previous
                     </Button>
-                    <span className="text-sm text-neutral-500">
+                    <span className="text-sm text-muted-foreground">
                         Page {page} of {Math.ceil(total / 50)}
                     </span>
                     <Button

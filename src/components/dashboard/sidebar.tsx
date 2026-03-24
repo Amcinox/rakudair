@@ -27,6 +27,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { VinylIllustration } from "@/components/dashboard/illustrations";
 
 /* ------------------------------------------------------------------ */
 /*  Navigation groups                                                  */
@@ -112,12 +113,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     return (
         <aside
             className={cn(
-                "flex flex-col border-r bg-white dark:bg-neutral-950 transition-all duration-200",
+                "flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-200",
                 collapsed ? "w-16" : "w-60",
             )}
         >
             {/* Logo */}
-            <div className="flex h-14 items-center border-b px-3">
+            <div className="flex h-14 items-center border-b border-sidebar-border px-3">
                 {!collapsed && (
                     <Link href="/dashboard" className="flex items-center gap-2">
                         <Image
@@ -125,9 +126,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                             alt="Rakuda Air"
                             width={28}
                             height={28}
-                            className="rounded-full"
+                            className="rounded-full ring-2 ring-primary/30"
                         />
-                        <span className="font-semibold text-sm">Rakuda Air</span>
+                        <span className="gold-gradient-text font-bold text-sm tracking-wide uppercase" style={{ fontFamily: "var(--font-display)" }}>
+                            Rakuda Air
+                        </span>
                     </Link>
                 )}
                 {collapsed && (
@@ -137,14 +140,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                             alt="Rakuda Air"
                             width={28}
                             height={28}
-                            className="rounded-full"
+                            className="rounded-full ring-2 ring-primary/30"
                         />
                     </Link>
                 )}
                 <Button
                     variant="ghost"
                     size="icon"
-                    className={cn("h-8 w-8 shrink-0", collapsed ? "hidden" : "ml-auto")}
+                    className={cn("h-8 w-8 shrink-0 text-muted-foreground hover:text-primary hover:bg-transparent", collapsed ? "hidden" : "ml-auto")}
                     onClick={onToggle}
                 >
                     <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
@@ -154,7 +157,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             {/* Mobile toggle when collapsed */}
             {collapsed && (
                 <div className="flex justify-center py-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggle}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-transparent" onClick={onToggle}>
                         <HugeiconsIcon icon={Menu01Icon} size={18} />
                     </Button>
                 </div>
@@ -184,10 +187,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                                         href={child.href}
                                         className={cn(
                                             "flex items-center justify-center rounded-md p-2 transition-colors",
-                                            "hover:bg-neutral-100 dark:hover:bg-neutral-800",
+                                            "hover:bg-sidebar-accent",
                                             isActive
-                                                ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
-                                                : "text-neutral-600 dark:text-neutral-400",
+                                                ? "nav-active rounded-l-none"
+                                                : "text-muted-foreground",
                                         )}
                                         title={child.title}
                                     >
@@ -210,9 +213,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                                     className={cn(
                                         "flex w-full items-center justify-between rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-colors",
                                         hasActiveChild
-                                            ? "text-red-700 dark:text-red-400"
-                                            : "text-neutral-400 dark:text-neutral-500",
-                                        "hover:text-neutral-700 dark:hover:text-neutral-300",
+                                            ? "gold-text"
+                                            : "text-muted-foreground",
+                                        "hover:text-foreground",
                                     )}
                                 >
                                     <span>{group.label}</span>
@@ -236,11 +239,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                                                     key={child.href}
                                                     href={child.href}
                                                     className={cn(
-                                                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                                                        "hover:bg-neutral-100 dark:hover:bg-neutral-800",
+                                                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
+                                                        "hover:bg-sidebar-accent",
                                                         isActive
-                                                            ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
-                                                            : "text-neutral-600 dark:text-neutral-400",
+                                                            ? "nav-active rounded-l-none"
+                                                            : "text-sidebar-foreground",
                                                     )}
                                                 >
                                                     <HugeiconsIcon
@@ -261,13 +264,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </ScrollArea>
 
             {/* Footer - View Site */}
-            <div className="border-t p-2">
+            <div className="border-t border-sidebar-border p-2">
+                {!collapsed && (
+                    <div className="flex justify-center py-2 opacity-40 hover:opacity-60 transition-opacity">
+                        <VinylIllustration className="w-16 h-16" />
+                    </div>
+                )}
                 <Link
                     href="/"
                     target="_blank"
                     className={cn(
                         "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                        "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800",
+                        "text-muted-foreground hover:text-primary hover:bg-sidebar-accent",
                         collapsed && "justify-center px-2",
                     )}
                 >

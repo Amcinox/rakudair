@@ -28,8 +28,8 @@ export function Topbar() {
         (pathname.includes("/edit") ? "Edit" : "Dashboard");
 
     return (
-        <header className="flex h-14 items-center justify-between border-b bg-white px-6 dark:bg-neutral-950">
-            <h1 className="text-lg font-semibold">{title}</h1>
+        <header className="flex h-14 items-center justify-between border-b border-border bg-card px-6">
+            <h1 className="dash-heading text-lg font-bold tracking-wide" style={{ fontFamily: "var(--font-display)" }}>{title}</h1>
             <div className="flex items-center gap-4">
                 <UserButton />
             </div>

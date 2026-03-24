@@ -27,7 +27,7 @@ const Editor = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="h-[500px] animate-pulse rounded-lg border bg-neutral-100" />
+            <div className="h-[500px] animate-pulse rounded-lg border bg-muted" />
         ),
     },
 );
@@ -169,7 +169,7 @@ export function PageForm({ pageId }: PageFormProps) {
     }
 
     if (loading) {
-        return <div className="h-[600px] animate-pulse rounded-lg bg-neutral-100" />;
+        return <div className="h-[600px] animate-pulse rounded-lg bg-muted" />;
     }
 
     const seoTitlePlaceholder = title || "Page title";
@@ -178,14 +178,15 @@ export function PageForm({ pageId }: PageFormProps) {
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
             {/* Main editor area */}
             <div className="space-y-4">
-                <div className="space-y-2">
+                <div className="dash-card rounded-lg p-4 space-y-2">
                     <Input
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="Page title"
-                        className="text-2xl font-bold h-14 border-none shadow-none focus-visible:ring-0 px-0"
+                        className="text-2xl font-bold h-14 bg-transparent border-none shadow-none focus-visible:ring-0 px-1 placeholder:text-muted-foreground/40"
+                        style={{ fontFamily: "var(--font-display)", letterSpacing: "0.02em" }}
                     />
-                    <div className="flex items-center gap-2 text-sm text-neutral-500">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span className="shrink-0">Slug:</span>
                         <Input
                             value={slug}
@@ -194,7 +195,7 @@ export function PageForm({ pageId }: PageFormProps) {
                                 setSlug(slugify(e.target.value, { lower: true, strict: true }));
                             }}
                             placeholder="auto-generated-slug"
-                            className="h-7 text-sm border-dashed"
+                            className="h-7 text-sm border-dashed border-border/50 bg-transparent"
                         />
                     </div>
                 </div>
@@ -209,8 +210,8 @@ export function PageForm({ pageId }: PageFormProps) {
             {/* Right sidebar */}
             <div className="space-y-6">
                 {/* Publish panel */}
-                <div className="rounded-lg border bg-white p-4 dark:bg-neutral-950 space-y-4">
-                    <h3 className="font-semibold text-sm">Status & Publish</h3>
+                <div className="dash-card rounded-lg p-4 space-y-4">
+                    <h3 className="font-semibold text-sm gold-text">Status & Publish</h3>
                     <Select value={status} onValueChange={setStatus}>
                         <SelectTrigger>
                             <SelectValue />
@@ -232,7 +233,7 @@ export function PageForm({ pageId }: PageFormProps) {
                         <Button
                             onClick={() => handleSave("published")}
                             disabled={saving}
-                            className="flex-1"
+                            className="flex-1 btn-gold"
                         >
                             Publish
                         </Button>
@@ -240,8 +241,8 @@ export function PageForm({ pageId }: PageFormProps) {
                 </div>
 
                 {/* Template */}
-                <div className="rounded-lg border bg-white p-4 dark:bg-neutral-950 space-y-3">
-                    <h3 className="font-semibold text-sm">Template</h3>
+                <div className="dash-card rounded-lg p-4 space-y-3">
+                    <h3 className="font-semibold text-sm gold-text">Template</h3>
                     <Select value={template} onValueChange={setTemplate}>
                         <SelectTrigger>
                             <SelectValue />
@@ -256,7 +257,7 @@ export function PageForm({ pageId }: PageFormProps) {
                 </div>
 
                 {/* Settings + SEO tabs */}
-                <div className="rounded-lg border bg-white dark:bg-neutral-950">
+                <div className="dash-card rounded-lg">
                     <Tabs defaultValue="settings">
                         <TabsList className="w-full grid grid-cols-2 rounded-b-none">
                             <TabsTrigger value="settings" className="text-xs">Settings</TabsTrigger>
@@ -293,18 +294,18 @@ export function PageForm({ pageId }: PageFormProps) {
                             </div>
                         </TabsContent>
                         <TabsContent value="seo" className="p-4 space-y-4">
-                            <p className="text-[11px] text-neutral-400">
+                            <p className="text-[11px] text-muted-foreground">
                                 SEO fields auto-fill from the page. Override below if needed.
                             </p>
                             <div className="space-y-2">
                                 <Label className="text-xs">Meta Title</Label>
                                 <Input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder={seoTitlePlaceholder} className="h-8 text-sm" />
-                                <span className="text-[10px] text-neutral-400">{(seoTitle || title).length}/60</span>
+                                <span className="text-[10px] text-muted-foreground">{(seoTitle || title).length}/60</span>
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-xs">Meta Description</Label>
                                 <Textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} placeholder="Page description for search engines" rows={2} className="text-sm" />
-                                <span className="text-[10px] text-neutral-400">{seoDescription.length}/160</span>
+                                <span className="text-[10px] text-muted-foreground">{seoDescription.length}/160</span>
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-xs">Keywords</Label>

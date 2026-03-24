@@ -69,13 +69,13 @@ export function Editor({
     return (
         <div
             className={cn(
-                "rounded-lg border bg-white dark:bg-neutral-950",
+                "rounded-lg border bg-card",
                 className,
             )}
         >
             <EditorToolbar editor={editor} />
             <EditorContent editor={editor} />
-            <div className="flex items-center justify-between border-t px-4 py-2 text-xs text-neutral-500">
+            <div className="flex items-center justify-between border-t px-4 py-2 text-xs text-muted-foreground">
                 <span>
                     {editor.storage.characterCount.words()} words ·{" "}
                     {editor.storage.characterCount.characters()} characters

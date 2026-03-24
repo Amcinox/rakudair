@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, type DragEvent } from "react"
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BoomboxIllustration } from "@/components/dashboard/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
     Dialog,
@@ -147,20 +148,20 @@ export default function MediaPage() {
 
     const filteredItems = search
         ? items.filter((item) =>
-              item.filename.toLowerCase().includes(search.toLowerCase()),
-          )
+            item.filename.toLowerCase().includes(search.toLowerCase()),
+        )
         : items;
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Media Library</h2>
-                    <p className="text-neutral-500">
+                    <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Media Library</h2>
+                    <p className="text-muted-foreground">
                         {items.length} file{items.length !== 1 ? "s" : ""} • Upload and manage your media assets.
                     </p>
                 </div>
-                <Button onClick={() => setUploadOpen(true)}>
+                <Button onClick={() => setUploadOpen(true)} className="btn-gold">
                     Upload Files
                 </Button>
             </div>
@@ -182,11 +183,12 @@ export default function MediaPage() {
                     ))}
                 </div>
             ) : filteredItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-neutral-500">
+                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                     {items.length === 0 ? (
                         <>
+                            <BoomboxIllustration className="w-40 h-auto opacity-70 mb-2" />
                             <p className="text-lg font-medium">No media uploaded yet</p>
-                            <p className="text-sm mt-1">Click &quot;Upload Files&quot; to get started.</p>
+                            <p className="text-sm mt-1">Turn the volume up — drop some files!</p>
                             <Button className="mt-4" onClick={() => setUploadOpen(true)}>
                                 Upload your first file
                             </Button>
@@ -201,7 +203,7 @@ export default function MediaPage() {
                         <button
                             key={item.id}
                             onClick={() => setSelected(item)}
-                            className="group relative aspect-square overflow-hidden rounded-lg border bg-neutral-100 dark:bg-neutral-900 hover:ring-2 hover:ring-red-500 transition-all"
+                            className="group relative aspect-square overflow-hidden rounded-lg border bg-muted hover:ring-2 hover:ring-primary transition-all"
                         >
                             {item.mimeType.startsWith("image/") ? (
                                 <Image
@@ -212,7 +214,7 @@ export default function MediaPage() {
                                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
                                 />
                             ) : (
-                                <div className="flex h-full items-center justify-center text-sm text-neutral-400">
+                                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                                     {item.filename}
                                 </div>
                             )}
@@ -239,7 +241,7 @@ export default function MediaPage() {
                         className={`
                             relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 cursor-pointer transition-colors
                             ${dragActive
-                                ? "border-red-500 bg-red-50 dark:bg-red-950/20"
+                                ? "border-primary bg-primary/10"
                                 : "border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-600"
                             }
                             ${uploading ? "pointer-events-none opacity-60" : ""}
@@ -257,21 +259,21 @@ export default function MediaPage() {
                             <div className="text-center space-y-3">
                                 <div className="h-2 w-48 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
                                     <div
-                                        className="h-full bg-red-500 rounded-full transition-all duration-300"
+                                        className="h-full bg-primary rounded-full transition-all duration-300"
                                         style={{ width: `${uploadProgress}%` }}
                                     />
                                 </div>
-                                <p className="text-sm text-neutral-500">Uploading… {uploadProgress}%</p>
+                                <p className="text-sm text-muted-foreground">Uploading… {uploadProgress}%</p>
                             </div>
                         ) : (
                             <>
-                                <svg className="h-10 w-10 text-neutral-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <svg className="h-10 w-10 text-muted-foreground mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                                 </svg>
-                                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                <p className="text-sm font-medium text-foreground dark:text-neutral-300">
                                     Drop files here or click to browse
                                 </p>
-                                <p className="text-xs text-neutral-400 mt-1">
+                                <p className="text-xs text-muted-foreground mt-1">
                                     Images up to 8MB each • Max 10 files
                                 </p>
                             </>
@@ -289,7 +291,7 @@ export default function MediaPage() {
                     {selected && (
                         <div className="space-y-4">
                             {selected.mimeType.startsWith("image/") && (
-                                <div className="relative aspect-video overflow-hidden rounded-lg bg-neutral-100">
+                                <div className="relative aspect-video overflow-hidden rounded-lg bg-muted">
                                     <Image
                                         src={selected.url}
                                         alt={selected.altText ?? selected.filename}
@@ -299,19 +301,19 @@ export default function MediaPage() {
                                 </div>
                             )}
                             <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div className="text-neutral-500">Size</div>
+                                <div className="text-muted-foreground">Size</div>
                                 <div>{formatSize(selected.size)}</div>
                                 {selected.width && (
                                     <>
-                                        <div className="text-neutral-500">Dimensions</div>
+                                        <div className="text-muted-foreground">Dimensions</div>
                                         <div>
                                             {selected.width}×{selected.height}
                                         </div>
                                     </>
                                 )}
-                                <div className="text-neutral-500">Type</div>
+                                <div className="text-muted-foreground">Type</div>
                                 <div>{selected.mimeType}</div>
-                                <div className="text-neutral-500">Uploaded</div>
+                                <div className="text-muted-foreground">Uploaded</div>
                                 <div>{new Date(selected.createdAt).toLocaleDateString()}</div>
                             </div>
                             <div className="space-y-2">

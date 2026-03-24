@@ -1,0 +1,9 @@
+export { BoomboxIllustration } from "./boombox";
+export { VinylIllustration } from "./vinyl";
+export { MicrophoneIllustration } from "./microphone";
+export { HeadphonesIllustration } from "./headphones";
+export { TurntableIllustration } from "./turntable";
+export { SneakerIllustration } from "./sneaker";
+export { GraffitiTagIllustration } from "./graffiti-tag";
+export { EmptyMicIllustration } from "./empty-mic";
+export { SprayCanIllustration } from "./spray-can";

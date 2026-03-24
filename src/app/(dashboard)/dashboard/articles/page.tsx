@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EmptyMicIllustration } from "@/components/dashboard/illustrations";
 import { Badge } from "@/components/ui/badge";
 import {
     Select,
@@ -36,10 +37,10 @@ type Article = {
 };
 
 const statusColors: Record<string, string> = {
-    draft: "bg-neutral-100 text-neutral-700",
-    published: "bg-green-100 text-green-700",
-    scheduled: "bg-blue-100 text-blue-700",
-    archived: "bg-yellow-100 text-yellow-700",
+    draft: "bg-muted text-foreground",
+    published: "badge-published",
+    scheduled: "badge-scheduled",
+    archived: "badge-archived",
 };
 
 export default function ArticlesPage() {
@@ -82,12 +83,12 @@ export default function ArticlesPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Articles</h2>
-                    <p className="text-neutral-500">
+                    <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Articles</h2>
+                    <p className="text-muted-foreground">
                         {total} article{total !== 1 ? "s" : ""} total
                     </p>
                 </div>
-                <Button asChild>
+                <Button asChild className="btn-gold">
                     <Link href="/dashboard/articles/new">New Article</Link>
                 </Button>
             </div>
@@ -114,7 +115,7 @@ export default function ArticlesPage() {
                 </Select>
             </div>
 
-            <div className="rounded-md border bg-white dark:bg-neutral-950">
+            <div className="dash-card rounded-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -136,9 +137,13 @@ export default function ArticlesPage() {
                             <TableRow>
                                 <TableCell
                                     colSpan={5}
-                                    className="text-center py-8 text-neutral-500"
+                                    className="text-center py-12 text-muted-foreground"
                                 >
-                                    No articles found.
+                                    <div className="flex flex-col items-center gap-2">
+                                        <EmptyMicIllustration className="w-28 h-28 opacity-70" />
+                                        <p className="font-medium">No articles found.</p>
+                                        <p className="text-sm">Time to drop some bars!</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -159,7 +164,7 @@ export default function ArticlesPage() {
                                             )}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-neutral-500">
+                                    <TableCell className="text-muted-foreground">
                                         {article.categoryName ?? "—"}
                                     </TableCell>
                                     <TableCell>
@@ -170,7 +175,7 @@ export default function ArticlesPage() {
                                             {article.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-neutral-500 text-sm">
+                                    <TableCell className="text-muted-foreground text-sm">
                                         {formatDistanceToNow(new Date(article.updatedAt), {
                                             addSuffix: true,
                                         })}
@@ -185,7 +190,7 @@ export default function ArticlesPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="text-red-600 hover:text-red-700"
+                                                className="text-destructive hover:text-destructive/80"
                                                 onClick={() => handleDelete(article.id)}
                                             >
                                                 Delete
@@ -210,7 +215,7 @@ export default function ArticlesPage() {
                     >
                         Previous
                     </Button>
-                    <span className="text-sm text-neutral-500">
+                    <span className="text-sm text-muted-foreground">
                         Page {page} of {Math.ceil(total / 20)}
                     </span>
                     <Button

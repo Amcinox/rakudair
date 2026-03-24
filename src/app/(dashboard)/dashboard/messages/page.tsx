@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MicrophoneIllustration } from "@/components/dashboard/illustrations";
 import {
     Select,
     SelectContent,
@@ -38,9 +39,9 @@ type Message = {
 };
 
 const statusColors: Record<string, string> = {
-    new: "bg-red-100 text-red-700",
-    read: "bg-yellow-100 text-yellow-700",
-    replied: "bg-green-100 text-green-700",
+    new: "badge-new",
+    read: "badge-archived",
+    replied: "badge-published",
 };
 
 export default function MessagesPage() {
@@ -101,8 +102,8 @@ export default function MessagesPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Messages</h2>
-                    <p className="text-neutral-500">
+                    <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Messages</h2>
+                    <p className="text-muted-foreground">
                         {total} message{total !== 1 ? "s" : ""}
                     </p>
                 </div>
@@ -122,7 +123,7 @@ export default function MessagesPage() {
                 </Select>
             </div>
 
-            <div className="rounded-md border bg-white dark:bg-neutral-950">
+            <div className="dash-card rounded-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -144,9 +145,13 @@ export default function MessagesPage() {
                             <TableRow>
                                 <TableCell
                                     colSpan={5}
-                                    className="text-center py-8 text-neutral-500"
+                                    className="text-center py-12 text-muted-foreground"
                                 >
-                                    No messages found.
+                                    <div className="flex flex-col items-center gap-2">
+                                        <MicrophoneIllustration className="w-16 h-24 opacity-70" />
+                                        <p className="font-medium">No messages found.</p>
+                                        <p className="text-sm">Nobody on the mic yet!</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -169,7 +174,7 @@ export default function MessagesPage() {
                                             onClick={() => openMessage(msg)}
                                         >
                                             {msg.name}
-                                            <span className="block text-xs text-neutral-400 font-normal">
+                                            <span className="block text-xs text-muted-foreground font-normal">
                                                 {msg.email}
                                             </span>
                                         </button>
@@ -182,7 +187,7 @@ export default function MessagesPage() {
                                             {msg.subject ?? "(No subject)"}
                                         </button>
                                     </TableCell>
-                                    <TableCell className="text-neutral-500 text-sm">
+                                    <TableCell className="text-muted-foreground text-sm">
                                         {formatDistanceToNow(new Date(msg.createdAt), {
                                             addSuffix: true,
                                         })}
@@ -191,7 +196,7 @@ export default function MessagesPage() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="text-red-600 hover:text-red-700"
+                                            className="text-destructive hover:text-destructive/80"
                                             onClick={() => handleDelete(msg.id)}
                                         >
                                             Delete
@@ -217,7 +222,7 @@ export default function MessagesPage() {
                             <div className="flex items-center justify-between text-sm">
                                 <div>
                                     <span className="font-medium">{viewing.name}</span>
-                                    <span className="text-neutral-500 ml-2">
+                                    <span className="text-muted-foreground ml-2">
                                         {viewing.email}
                                     </span>
                                 </div>
@@ -228,7 +233,7 @@ export default function MessagesPage() {
                                     {viewing.status}
                                 </Badge>
                             </div>
-                            <div className="rounded-lg border bg-neutral-50 p-4 text-sm whitespace-pre-wrap">
+                            <div className="dash-card rounded-lg p-4 text-sm whitespace-pre-wrap">
                                 {viewing.message}
                             </div>
                             <div className="flex justify-between">

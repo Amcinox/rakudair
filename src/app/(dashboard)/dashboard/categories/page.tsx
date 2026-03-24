@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SprayCanIllustration } from "@/components/dashboard/illustrations";
 import { Textarea } from "@/components/ui/textarea";
 import {
     Dialog,
@@ -115,12 +116,12 @@ export default function CategoriesPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Categories</h2>
-                    <p className="text-neutral-500">Organize your articles by category.</p>
+                    <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Categories</h2>
+                    <p className="text-muted-foreground">Organize your articles by category.</p>
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button onClick={openCreate}>Add Category</Button>
+                        <Button onClick={openCreate} className="btn-gold">Add Category</Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
@@ -208,7 +209,7 @@ export default function CategoriesPage() {
                 </Dialog>
             </div>
 
-            <div className="rounded-md border bg-white dark:bg-neutral-950">
+            <div className="dash-card rounded-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -230,9 +231,13 @@ export default function CategoriesPage() {
                             <TableRow>
                                 <TableCell
                                     colSpan={5}
-                                    className="text-center py-8 text-neutral-500"
+                                    className="text-center py-12 text-muted-foreground"
                                 >
-                                    No categories yet. Create your first one.
+                                    <div className="flex flex-col items-center gap-2">
+                                        <SprayCanIllustration className="w-20 h-28 opacity-70" />
+                                        <p className="font-medium">No categories yet.</p>
+                                        <p className="text-sm">Tag your first collection!</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -245,7 +250,7 @@ export default function CategoriesPage() {
                                         />
                                     </TableCell>
                                     <TableCell className="font-medium">{cat.name}</TableCell>
-                                    <TableCell className="text-neutral-500">
+                                    <TableCell className="text-muted-foreground">
                                         {cat.slug}
                                     </TableCell>
                                     <TableCell>{cat.sortOrder}</TableCell>
@@ -261,7 +266,7 @@ export default function CategoriesPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="text-red-600 hover:text-red-700"
+                                                className="text-destructive hover:text-destructive/80"
                                                 onClick={() => handleDelete(cat.id)}
                                             >
                                                 Delete

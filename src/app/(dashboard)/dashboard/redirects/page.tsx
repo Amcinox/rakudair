@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { SneakerIllustration } from "@/components/dashboard/illustrations";
 import {
     Select,
     SelectContent,
@@ -138,15 +139,15 @@ export default function RedirectsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Redirects</h2>
-                    <p className="text-neutral-500">
+                    <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Redirects</h2>
+                    <p className="text-muted-foreground">
                         {total} redirect{total !== 1 ? "s" : ""} configured
                     </p>
                 </div>
-                <Button onClick={openCreate}>Add Redirect</Button>
+                <Button onClick={openCreate} className="btn-gold">Add Redirect</Button>
             </div>
 
-            <div className="rounded-md border bg-white dark:bg-neutral-950">
+            <div className="dash-card rounded-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -168,9 +169,13 @@ export default function RedirectsPage() {
                             <TableRow>
                                 <TableCell
                                     colSpan={5}
-                                    className="text-center py-8 text-neutral-500"
+                                    className="text-center py-12 text-muted-foreground"
                                 >
-                                    No redirects configured.
+                                    <div className="flex flex-col items-center gap-2">
+                                        <SneakerIllustration className="w-28 h-20 opacity-70" />
+                                        <p className="font-medium">No redirects configured.</p>
+                                        <p className="text-sm">No detours on the track!</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -187,8 +192,8 @@ export default function RedirectsPage() {
                                             variant="secondary"
                                             className={
                                                 item.type === 301
-                                                    ? "bg-blue-100 text-blue-700"
-                                                    : "bg-yellow-100 text-yellow-700"
+                                                    ? "badge-scheduled"
+                                                    : "badge-archived"
                                             }
                                         >
                                             {item.type}
@@ -212,7 +217,7 @@ export default function RedirectsPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="text-red-600 hover:text-red-700"
+                                                className="text-destructive hover:text-destructive/80"
                                                 onClick={() => handleDelete(item.id)}
                                             >
                                                 Delete

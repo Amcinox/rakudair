@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { GraffitiTagIllustration } from "@/components/dashboard/illustrations";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -54,9 +55,9 @@ type SeoEntry = {
 };
 
 const typeColors: Record<string, string> = {
-    article: "bg-blue-100 text-blue-700",
+    article: "badge-scheduled",
     page: "bg-purple-100 text-purple-700",
-    global: "bg-green-100 text-green-700",
+    global: "badge-published",
     category: "bg-orange-100 text-orange-700",
 };
 
@@ -179,8 +180,8 @@ export default function SeoPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-2xl font-bold tracking-tight">SEO Management</h2>
-                <p className="text-neutral-500">
+                <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>SEO Management</h2>
+                <p className="text-muted-foreground">
                     Manage meta tags for all articles, pages, and global settings.
                 </p>
             </div>
@@ -207,7 +208,7 @@ export default function SeoPage() {
                 </Select>
             </div>
 
-            <div className="rounded-md border bg-white dark:bg-neutral-950">
+            <div className="dash-card rounded-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -230,9 +231,13 @@ export default function SeoPage() {
                             <TableRow>
                                 <TableCell
                                     colSpan={6}
-                                    className="text-center py-8 text-neutral-500"
+                                    className="text-center py-12 text-muted-foreground"
                                 >
-                                    No SEO entries found.
+                                    <div className="flex flex-col items-center gap-2">
+                                        <GraffitiTagIllustration className="w-32 h-14 opacity-70" />
+                                        <p className="font-medium">No SEO entries found.</p>
+                                        <p className="text-sm">Make your mark — optimize a page!</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -258,7 +263,7 @@ export default function SeoPage() {
                                                 : "Missing"}
                                         </span>
                                         {entry.metaTitle && (
-                                            <span className="block text-xs text-neutral-400">
+                                            <span className="block text-xs text-muted-foreground">
                                                 {entry.metaTitle.length}/60
                                             </span>
                                         )}
@@ -272,7 +277,7 @@ export default function SeoPage() {
                                                 : "Missing"}
                                         </span>
                                         {entry.metaDescription && (
-                                            <span className="block text-xs text-neutral-400">
+                                            <span className="block text-xs text-muted-foreground">
                                                 {entry.metaDescription.length}/160
                                             </span>
                                         )}
@@ -322,7 +327,7 @@ export default function SeoPage() {
                             <div className="space-y-2">
                                 <Label className="text-sm">
                                     Meta Title{" "}
-                                    <span className="text-neutral-400">
+                                    <span className="text-muted-foreground">
                                         ({form.metaTitle.length}/60)
                                     </span>
                                 </Label>
@@ -337,7 +342,7 @@ export default function SeoPage() {
                             <div className="space-y-2">
                                 <Label className="text-sm">
                                     Meta Description{" "}
-                                    <span className="text-neutral-400">
+                                    <span className="text-muted-foreground">
                                         ({form.metaDescription.length}/160)
                                     </span>
                                 </Label>

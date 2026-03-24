@@ -12,11 +12,11 @@ export default function DashboardLayout({
     const [collapsed, setCollapsed] = useState(false);
 
     return (
-        <div className="flex h-screen overflow-hidden">
+        <div className="dashboard flex h-screen overflow-hidden">
             <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
             <div className="flex flex-1 flex-col overflow-hidden">
                 <Topbar />
-                <main className="flex-1 overflow-auto bg-neutral-50 p-6 dark:bg-neutral-900">
+                <main className="flex-1 overflow-auto bg-background p-6">
                     {children}
                 </main>
             </div>

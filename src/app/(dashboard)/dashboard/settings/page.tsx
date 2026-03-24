@@ -72,19 +72,19 @@ export default function SettingsPage() {
 
     if (loading) {
         return (
-            <div className="h-[400px] animate-pulse rounded-lg bg-neutral-100" />
+            <div className="h-[400px] animate-pulse rounded-lg bg-muted" />
         );
     }
 
     return (
         <div className="space-y-6 max-w-2xl">
             <div>
-                <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
-                <p className="text-neutral-500">General site configuration.</p>
+                <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Settings</h2>
+                <p className="text-muted-foreground">General site configuration.</p>
             </div>
 
             {/* General */}
-            <div className="rounded-lg border bg-white p-6 dark:bg-neutral-950 space-y-4">
+            <div className="dash-card rounded-lg p-6 space-y-4">
                 <h3 className="font-semibold">General</h3>
                 <div className="space-y-2">
                     <Label>Site Name</Label>
@@ -128,7 +128,7 @@ export default function SettingsPage() {
             <Separator />
 
             {/* Social */}
-            <div className="rounded-lg border bg-white p-6 dark:bg-neutral-950 space-y-4">
+            <div className="dash-card rounded-lg p-6 space-y-4">
                 <h3 className="font-semibold">Social Media</h3>
                 <div className="space-y-2">
                     <Label>Twitter / X</Label>
@@ -165,7 +165,7 @@ export default function SettingsPage() {
             <Separator />
 
             {/* Performance */}
-            <div className="rounded-lg border bg-white p-6 dark:bg-neutral-950 space-y-4">
+            <div className="dash-card rounded-lg p-6 space-y-4">
                 <h3 className="font-semibold">Display & Analytics</h3>
                 <div className="space-y-2">
                     <Label>Posts Per Page</Label>

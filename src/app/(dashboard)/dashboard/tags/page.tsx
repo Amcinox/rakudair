@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { VinylIllustration } from "@/components/dashboard/illustrations";
 import {
     Dialog,
     DialogContent,
@@ -100,14 +101,14 @@ export default function TagsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Tags</h2>
-                    <p className="text-neutral-500">
+                    <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Tags</h2>
+                    <p className="text-muted-foreground">
                         Manage tags for fine-grained article classification.
                     </p>
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button onClick={openCreate}>Add Tag</Button>
+                        <Button onClick={openCreate} className="btn-gold">Add Tag</Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
@@ -143,7 +144,7 @@ export default function TagsPage() {
                 </Dialog>
             </div>
 
-            <div className="rounded-md border bg-white dark:bg-neutral-950">
+            <div className="dash-card rounded-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -164,16 +165,20 @@ export default function TagsPage() {
                             <TableRow>
                                 <TableCell
                                     colSpan={4}
-                                    className="text-center py-8 text-neutral-500"
+                                    className="text-center py-12 text-muted-foreground"
                                 >
-                                    No tags yet. Create your first one.
+                                    <div className="flex flex-col items-center gap-2">
+                                        <VinylIllustration className="w-24 h-24 opacity-70" />
+                                        <p className="font-medium">No tags yet.</p>
+                                        <p className="text-sm">Spin up your first label!</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
                             tags.map((tag) => (
                                 <TableRow key={tag.id}>
                                     <TableCell className="font-medium">{tag.name}</TableCell>
-                                    <TableCell className="text-neutral-500">
+                                    <TableCell className="text-muted-foreground">
                                         {tag.slug}
                                     </TableCell>
                                     <TableCell>
@@ -191,7 +196,7 @@ export default function TagsPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="text-red-600 hover:text-red-700"
+                                                className="text-destructive hover:text-destructive/80"
                                                 onClick={() => handleDelete(tag.id)}
                                             >
                                                 Delete
