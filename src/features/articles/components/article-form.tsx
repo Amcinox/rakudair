@@ -79,6 +79,8 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
     const contentRef = useRef<JSONContent | undefined>(undefined);
     const htmlRef = useRef<string>("");
     const [initialContent, setInitialContent] = useState<JSONContent | undefined>(undefined);
+    // For edit pages, track whether content has been loaded (may still be undefined if article has no content)
+    const [contentLoaded, setContentLoaded] = useState(!isEdit);
 
     // Data
     const [categories, setCategories] = useState<Category[]>([]);
@@ -114,6 +116,7 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                     return tagIds.map((id) => ({ id, name: "", slug: "" }));
                 });
                 if (a.content) setInitialContent(a.content as JSONContent);
+                setContentLoaded(true);
                 setLoading(false);
             },
         );
@@ -307,11 +310,14 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                     </div>
                 </div>
 
-                <Editor
-                    content={initialContent}
-                    onChange={handleEditorChange}
-                    placeholder="Start writing your article…"
-                />
+                {contentLoaded && (
+                    <Editor
+                        key={isEdit ? "edit" : "new"}
+                        content={initialContent}
+                        onChange={handleEditorChange}
+                        placeholder="Start writing your article…"
+                    />
+                )}
             </div>
 
             {/* Right sidebar */}

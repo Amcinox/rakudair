@@ -21,17 +21,14 @@ export type Article = {
     updatedAt: string;
 };
 
-interface UseArticlesOptions {
-    page?: number;
-    limit?: number;
-    status?: string;
-    category?: string;
-    search?: string;
-    sort?: string;
-}
-
-export function useArticles(options: UseArticlesOptions = {}) {
-    const { page = 1, limit = 20, status, category, search, sort } = options;
+export function useArticles(
+    page = 1,
+    limit = 20,
+    status?: string,
+    search?: string,
+    category?: string,
+    sort?: string,
+) {
     const [articles, setArticles] = useState<Article[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);

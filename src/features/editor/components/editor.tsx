@@ -31,6 +31,7 @@ export function Editor({
     placeholder = "Start writing your article…",
     className,
 }: EditorProps) {
+    "use no memo";
     const editor = useEditor({
         immediatelyRender: false,
         extensions: [

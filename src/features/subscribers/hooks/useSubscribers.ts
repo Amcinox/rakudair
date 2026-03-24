@@ -13,7 +13,11 @@ export type Subscriber = {
     unsubscribedAt: string | null;
 };
 
-export function useSubscribers(statusFilter?: string) {
+export function useSubscribers(
+    statusFilter?: string,
+    page = 1,
+    limit = 50,
+) {
     const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -21,7 +25,7 @@ export function useSubscribers(statusFilter?: string) {
     const fetch_ = useCallback(async () => {
         try {
             setLoading(true);
-            const params = new URLSearchParams();
+            const params = new URLSearchParams({ page: String(page), limit: String(limit) });
             if (statusFilter) params.set("status", statusFilter);
 
             const json = await apiFetch<{ data: Subscriber[]; total: number }>(
@@ -34,7 +38,7 @@ export function useSubscribers(statusFilter?: string) {
         } finally {
             setLoading(false);
         }
-    }, [statusFilter]);
+    }, [statusFilter, page, limit]);
 
     useEffect(() => { fetch_(); }, [fetch_]);
 

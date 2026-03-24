@@ -16,15 +16,12 @@ export type Page = {
     updatedAt: string;
 };
 
-interface UsePagesOptions {
-    page?: number;
-    limit?: number;
-    status?: string;
-    search?: string;
-}
-
-export function usePages(options: UsePagesOptions = {}) {
-    const { page = 1, limit = 20, status, search } = options;
+export function usePages(
+    page = 1,
+    limit = 20,
+    status?: string,
+    search?: string,
+) {
     const [pages, setPages] = useState<Page[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
