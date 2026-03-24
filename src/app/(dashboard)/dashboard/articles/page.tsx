@@ -24,6 +24,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useArticles } from "@/features/articles/hooks/useArticles";
+import { ExternalLink } from "lucide-react";
 
 const statusColors: Record<string, string> = {
     draft: "bg-muted text-foreground",
@@ -164,7 +165,14 @@ export default function ArticlesPage() {
                                             })}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <div className="flex justify-end gap-2">
+                                            <div className="flex justify-end gap-1">
+                                                {article.slug && (
+                                                    <Button variant="ghost" size="sm" asChild>
+                                                        <a href={`/blog/${article.slug}`} target="_blank" rel="noopener noreferrer" title="Preview">
+                                                            <ExternalLink className="w-3.5 h-3.5" />
+                                                        </a>
+                                                    </Button>
+                                                )}
                                                 <Button variant="ghost" size="sm" asChild>
                                                     <Link href={`/dashboard/articles/${article.id}/edit`}>
                                                         Edit

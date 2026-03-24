@@ -78,11 +78,29 @@ export function Footer() {
     const links = config.footerLinks.length > 0 ? config.footerLinks : fallbackFooterLinks;
     const { siteName, siteTagline, siteDescription, logoUrl, settings } = config;
 
-    // Also support social links from site_settings if no social nav items
-    const effectiveSocials: NavItem[] =
-        config.socialLinks.length > 0
-            ? config.socialLinks
-            : buildSocialsFromSettings(settings);
+    // Column headings from settings
+    const navHeading = (settings.footerNavHeading as string) || "探索する";
+    const legalHeading = (settings.footerLegalHeading as string) || "会社情報";
+    const newsletterHeading = (settings.footerNewsletterHeading as string) || "ニュースレター";
+    const newsletterDescription = (settings.footerNewsletterDescription as string) || "最新の旅行記や特別コンテンツを受け取る";
+
+    // Legal links from settings
+    const legalLinks: { label: string; url: string }[] = (() => {
+        const raw = settings.footerLegalLinks;
+        if (Array.isArray(raw)) return raw as { label: string; url: string }[];
+        if (typeof raw === "string") {
+            try { return JSON.parse(raw); } catch { /* fallthrough */ }
+        }
+        return [
+            { label: "プライバシーポリシー", url: "/privacy" },
+            { label: "利用規約", url: "/terms" },
+        ];
+    })();
+
+    // Social media: prefer settings-based socials, fall back to nav items
+    const effectiveSocials: NavItem[] = buildSocialsFromSettings(settings).length > 0
+        ? buildSocialsFromSettings(settings)
+        : config.socialLinks;
 
     return (
         <footer className="bg-secondary border-t border-border">
@@ -135,7 +153,7 @@ export function Footer() {
                     {/* Navigation Links */}
                     <div>
                         <h3 className="font-serif font-bold text-foreground mb-4">
-                            探索する
+                            {navHeading}
                         </h3>
                         <ul className="space-y-3">
                             {links.map((link) => (
@@ -152,38 +170,32 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    {/* Legal — use footer links with "legal" in label or fallback */}
+                    {/* Legal */}
                     <div>
                         <h3 className="font-serif font-bold text-foreground mb-4">
-                            会社情報
+                            {legalHeading}
                         </h3>
                         <ul className="space-y-3">
-                            <li>
-                                <Link
-                                    href="/privacy"
-                                    className="text-muted-foreground hover:text-primary transition-colors text-sm"
-                                >
-                                    プライバシーポリシー
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/terms"
-                                    className="text-muted-foreground hover:text-primary transition-colors text-sm"
-                                >
-                                    利用規約
-                                </Link>
-                            </li>
+                            {legalLinks.map((link, i) => (
+                                <li key={i}>
+                                    <Link
+                                        href={link.url}
+                                        className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </div>
 
                     {/* Newsletter */}
                     <div>
                         <h3 className="font-serif font-bold text-foreground mb-4">
-                            ニュースレター
+                            {newsletterHeading}
                         </h3>
                         <p className="text-muted-foreground text-sm mb-4">
-                            最新の旅行記や特別コンテンツを受け取る
+                            {newsletterDescription}
                         </p>
                         <NewsletterForm variant="footer" />
                     </div>

@@ -19,7 +19,10 @@ export function Header() {
     const [isOpen, setIsOpen] = useState(false);
 
     const links = config.navLinks.length > 0 ? config.navLinks : fallbackLinks;
-    const { siteName, siteTagline, logoUrl } = config;
+    const { siteName, siteTagline, logoUrl, settings } = config;
+
+    const ctaText = (settings.headerCtaText as string) || "購読する";
+    const ctaLink = (settings.headerCtaLink as string) || "/blog";
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -57,8 +60,10 @@ export function Header() {
                                 {link.label}
                             </Link>
                         ))}
-                        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                            購読する
+                        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                            <Link href={ctaLink}>
+                                {ctaText}
+                            </Link>
                         </Button>
                     </nav>
 
@@ -88,8 +93,10 @@ export function Header() {
                                 {link.label}
                             </Link>
                         ))}
-                        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground w-full mt-2">
-                            購読する
+                        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground w-full mt-2">
+                            <Link href={ctaLink}>
+                                {ctaText}
+                            </Link>
                         </Button>
                     </nav>
                 </div>

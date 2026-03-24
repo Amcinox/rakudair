@@ -24,6 +24,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useConfirm } from "@/hooks/use-confirm";
 import { usePages } from "@/features/pages/hooks/usePages";
+import { ExternalLink } from "lucide-react";
 
 export default function PagesPage() {
     const [search, setSearch] = useState("");
@@ -160,7 +161,14 @@ export default function PagesPage() {
                                             })}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <div className="flex justify-end gap-2">
+                                            <div className="flex justify-end gap-1">
+                                                {pg.slug && (
+                                                    <Button variant="ghost" size="sm" asChild>
+                                                        <a href={`/${pg.slug}`} target="_blank" rel="noopener noreferrer" title="Preview">
+                                                            <ExternalLink className="w-3.5 h-3.5" />
+                                                        </a>
+                                                    </Button>
+                                                )}
                                                 <Button variant="ghost" size="sm" asChild>
                                                     <Link href={`/dashboard/pages/${pg.id}/edit`}>
                                                         Edit

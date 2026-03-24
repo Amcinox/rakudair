@@ -60,7 +60,7 @@ export function Editor({
         },
         editorProps: {
             attributes: {
-                class: "prose prose-neutral dark:prose-invert max-w-none min-h-[400px] focus:outline-none px-6 py-4",
+                class: "prose prose-neutral dark:prose-invert max-w-none min-h-[600px] focus:outline-none px-6 py-4",
             },
         },
     });

@@ -267,7 +267,19 @@ export default function NavigationPage() {
     });
 
     const tree = useMemo(() => buildTree(items), [items]);
-    const flatList = useMemo(() => flattenTree(tree), [tree]);
+    const flatList = useMemo(() => {
+        const groups: Record<string, TreeNode[]> = {};
+        for (const root of tree) {
+            const pos = root.position;
+            if (!groups[pos]) groups[pos] = [];
+            groups[pos].push(root);
+        }
+        const result: TreeNode[] = [];
+        for (const pos of ["header", "footer", "social"]) {
+            if (groups[pos]) result.push(...flattenTree(groups[pos]));
+        }
+        return result;
+    }, [tree]);
 
     const visibleList = useMemo(() => {
         const hidden = new Set<string>();
@@ -288,6 +300,16 @@ export default function NavigationPage() {
         hideDescendants(tree);
         return flatList.filter((n) => !hidden.has(n.id));
     }, [flatList, collapsed, tree]);
+
+    const positionGrouped = useMemo(() => {
+        const groups: Record<string, TreeNode[]> = {};
+        for (const node of visibleList) {
+            const pos = node.position;
+            if (!groups[pos]) groups[pos] = [];
+            groups[pos].push(node);
+        }
+        return groups;
+    }, [visibleList]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -391,6 +413,7 @@ export default function NavigationPage() {
 
         let prevSibling: TreeNode | null = null;
         for (let i = idx - 1; i >= 0; i--) {
+            if (flatList[i].position !== node.position) break;
             if (flatList[i].depth === node.depth) { prevSibling = flatList[i]; break; }
             if (flatList[i].depth < node.depth) break;
         }
@@ -458,6 +481,9 @@ export default function NavigationPage() {
 
         const draggedNode = visibleList[oldIndex];
         const targetNode = visibleList[newIndex];
+
+        // Prevent cross-position drops
+        if (draggedNode.position !== targetNode.position) return;
 
         const draggedIds = new Set<string>();
         draggedIds.add(draggedNode.id);
@@ -539,25 +565,35 @@ export default function NavigationPage() {
                         </div>
                     ) : (
                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                            <SortableContext items={visibleList.map((n) => n.id)} strategy={verticalListSortingStrategy}>
-                                <div className="space-y-1.5">
-                                    {visibleList.map((node) => (
-                                        <SortableNavItem
-                                            key={node.id}
-                                            node={node}
-                                            onEdit={openEdit}
-                                            onDelete={handleDelete}
-                                            onToggleVisibility={toggleVisibility}
-                                            onAddChild={openCreateChild}
-                                            onIndent={handleIndent}
-                                            onOutdent={handleOutdent}
-                                            collapsed={collapsed}
-                                            onToggleCollapse={toggleCollapse}
-                                            hasChildren={hasChildren(node.id)}
-                                        />
-                                    ))}
+                            {["header", "footer", "social"].filter((pos) => positionGrouped[pos]?.length > 0).map((pos) => (
+                                <div key={pos}>
+                                    {posFilter === "all" && (
+                                        <div className="flex items-center gap-2 pt-3 pb-1.5 first:pt-0">
+                                            <Badge variant="secondary" className={`${positionColors[pos] ?? ""} text-[10px] capitalize`}>{pos}</Badge>
+                                            <div className="flex-1 h-px bg-border" />
+                                        </div>
+                                    )}
+                                    <SortableContext items={positionGrouped[pos].map((n) => n.id)} strategy={verticalListSortingStrategy}>
+                                        <div className="space-y-1.5">
+                                            {positionGrouped[pos].map((node) => (
+                                                <SortableNavItem
+                                                    key={node.id}
+                                                    node={node}
+                                                    onEdit={openEdit}
+                                                    onDelete={handleDelete}
+                                                    onToggleVisibility={toggleVisibility}
+                                                    onAddChild={openCreateChild}
+                                                    onIndent={handleIndent}
+                                                    onOutdent={handleOutdent}
+                                                    collapsed={collapsed}
+                                                    onToggleCollapse={toggleCollapse}
+                                                    hasChildren={hasChildren(node.id)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
                                 </div>
-                            </SortableContext>
+                            ))}
                             <DragOverlay>{activeNode && <DragOverlayItem node={activeNode} />}</DragOverlay>
                         </DndContext>
                     )}

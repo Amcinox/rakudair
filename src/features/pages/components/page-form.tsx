@@ -159,7 +159,7 @@ export function PageForm({ pageId }: PageFormProps) {
 
             toast.success(isEdit ? "Page updated" : "Page created");
             if (!isEdit) {
-                router.push(`/dashboard/pages/${json.data.id}/edit`);
+                router.push("/dashboard/pages");
             }
         } catch (e) {
             toast.error(e instanceof Error ? e.message : "Failed to save");
@@ -184,7 +184,7 @@ export function PageForm({ pageId }: PageFormProps) {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Page title"
-                            className="text-2xl font-bold h-14 bg-transparent border-none shadow-none focus-visible:ring-0 px-1 placeholder:text-muted-foreground/40"
+                            className="text-2xl font-bold h-14 px-3 placeholder:text-muted-foreground/40"
                             style={{ fontFamily: "var(--font-display)", letterSpacing: "0.02em" }}
                         />
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
