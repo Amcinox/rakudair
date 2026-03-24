@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,20 +29,10 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-
-type Redirect = {
-    id: string;
-    fromPath: string;
-    toPath: string;
-    type: number;
-    isActive: boolean;
-    createdAt: string;
-};
+import { useConfirm } from "@/hooks/use-confirm";
+import { useRedirects, type Redirect } from "@/features/redirects/hooks/useRedirects";
 
 export default function RedirectsPage() {
-    const [items, setItems] = useState<Redirect[]>([]);
-    const [total, setTotal] = useState(0);
-    const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<Redirect | null>(null);
     const [saving, setSaving] = useState(false);
@@ -54,18 +44,14 @@ export default function RedirectsPage() {
         isActive: true,
     });
 
-    async function fetchRedirects() {
-        setLoading(true);
-        const res = await fetch("/api/redirects");
-        const json = await res.json();
-        setItems(json.data ?? []);
-        setTotal(json.total ?? 0);
-        setLoading(false);
-    }
+    const { redirects, total, loading, create, update, remove } = useRedirects();
 
-    useEffect(() => {
-        fetchRedirects();
-    }, []);
+    const [ConfirmDialog, confirm] = useConfirm({
+        title: "Delete redirect?",
+        description: "This redirect will be permanently deleted.",
+        confirmText: "Delete",
+        variant: "destructive",
+    });
 
     function openCreate() {
         setEditing(null);
@@ -91,211 +77,201 @@ export default function RedirectsPage() {
         }
 
         setSaving(true);
-
-        const url = editing
-            ? `/api/redirects/${editing.id}`
-            : "/api/redirects";
-        const method = editing ? "PATCH" : "POST";
-
-        const res = await fetch(url, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form),
-        });
-
-        setSaving(false);
-
-        if (!res.ok) {
-            toast.error("Failed to save");
-            return;
+        try {
+            if (editing) {
+                await update(editing.id, form);
+            } else {
+                await create(form);
+            }
+            setOpen(false);
+        } catch {
+            // handled by hook
+        } finally {
+            setSaving(false);
         }
-
-        toast.success(editing ? "Updated" : "Created");
-        setOpen(false);
-        fetchRedirects();
     }
 
     async function handleDelete(id: string) {
-        if (!confirm("Delete this redirect?")) return;
-        const res = await fetch(`/api/redirects/${id}`, { method: "DELETE" });
-        if (!res.ok) {
-            toast.error("Failed to delete");
-            return;
+        if (!(await confirm())) return;
+        try {
+            await remove(id);
+        } catch {
+            // handled by hook
         }
-        toast.success("Deleted");
-        fetchRedirects();
     }
 
     async function toggleActive(item: Redirect) {
-        await fetch(`/api/redirects/${item.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ isActive: !item.isActive }),
-        });
-        fetchRedirects();
+        try {
+            await update(item.id, { isActive: !item.isActive });
+        } catch {
+            // handled by hook
+        }
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Redirects</h2>
-                    <p className="text-muted-foreground">
-                        {total} redirect{total !== 1 ? "s" : ""} configured
-                    </p>
+        <>
+            <ConfirmDialog />
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Redirects</h2>
+                        <p className="text-muted-foreground">
+                            {total} redirect{total !== 1 ? "s" : ""} configured
+                        </p>
+                    </div>
+                    <Button onClick={openCreate} className="btn-gold">Add Redirect</Button>
                 </div>
-                <Button onClick={openCreate} className="btn-gold">Add Redirect</Button>
-            </div>
 
-            <div className="dash-card rounded-lg">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>From</TableHead>
-                            <TableHead>To</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Active</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading ? (
+                <div className="dash-card rounded-lg">
+                    <Table>
+                        <TableHeader>
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8">
-                                    Loading…
-                                </TableCell>
+                                <TableHead>From</TableHead>
+                                <TableHead>To</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead>Active</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
-                        ) : items.length === 0 ? (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={5}
-                                    className="text-center py-12 text-muted-foreground"
-                                >
-                                    <div className="flex flex-col items-center gap-2">
-                                        <SneakerIllustration className="w-28 h-20 opacity-70" />
-                                        <p className="font-medium">No redirects configured.</p>
-                                        <p className="text-sm">No detours on the track!</p>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            items.map((item) => (
-                                <TableRow key={item.id}>
-                                    <TableCell className="font-mono text-sm">
-                                        {item.fromPath}
+                        </TableHeader>
+                        <TableBody>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center py-8">
+                                        Loading…
                                     </TableCell>
-                                    <TableCell className="font-mono text-sm">
-                                        {item.toPath}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant="secondary"
-                                            className={
-                                                item.type === 301
-                                                    ? "badge-scheduled"
-                                                    : "badge-archived"
-                                            }
-                                        >
-                                            {item.type}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Switch
-                                            checked={item.isActive}
-                                            onCheckedChange={() => toggleActive(item)}
-                                        />
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => openEdit(item)}
-                                            >
-                                                Edit
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-destructive hover:text-destructive/80"
-                                                onClick={() => handleDelete(item.id)}
-                                            >
-                                                Delete
-                                            </Button>
+                                </TableRow>
+                            ) : redirects.length === 0 ? (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={5}
+                                        className="text-center py-12 text-muted-foreground"
+                                    >
+                                        <div className="flex flex-col items-center gap-2">
+                                            <SneakerIllustration className="w-28 h-20 opacity-70" />
+                                            <p className="font-medium">No redirects configured.</p>
+                                            <p className="text-sm">No detours on the track!</p>
                                         </div>
                                     </TableCell>
                                 </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                            ) : (
+                                redirects.map((item) => (
+                                    <TableRow key={item.id}>
+                                        <TableCell className="font-mono text-sm">
+                                            {item.fromPath}
+                                        </TableCell>
+                                        <TableCell className="font-mono text-sm">
+                                            {item.toPath}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                variant="secondary"
+                                                className={
+                                                    item.type === 301
+                                                        ? "badge-scheduled"
+                                                        : "badge-archived"
+                                                }
+                                            >
+                                                {item.type}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Switch
+                                                checked={item.isActive}
+                                                onCheckedChange={() => toggleActive(item)}
+                                            />
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => openEdit(item)}
+                                                >
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-destructive hover:text-destructive/80"
+                                                    onClick={() => handleDelete(item.id)}
+                                                >
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
 
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
-                            {editing ? "Edit Redirect" : "Add Redirect"}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>From Path</Label>
-                            <Input
-                                value={form.fromPath}
-                                onChange={(e) =>
-                                    setForm((f) => ({ ...f, fromPath: e.target.value }))
-                                }
-                                placeholder="/old-path"
-                            />
+                <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>
+                                {editing ? "Edit Redirect" : "Add Redirect"}
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>From Path</Label>
+                                <Input
+                                    value={form.fromPath}
+                                    onChange={(e) =>
+                                        setForm((f) => ({ ...f, fromPath: e.target.value }))
+                                    }
+                                    placeholder="/old-path"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>To Path</Label>
+                                <Input
+                                    value={form.toPath}
+                                    onChange={(e) =>
+                                        setForm((f) => ({ ...f, toPath: e.target.value }))
+                                    }
+                                    placeholder="/new-path"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Type</Label>
+                                <Select
+                                    value={String(form.type)}
+                                    onValueChange={(v) =>
+                                        setForm((f) => ({ ...f, type: Number(v) }))
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="301">301 (Permanent)</SelectItem>
+                                        <SelectItem value="302">302 (Temporary)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label>Active</Label>
+                                <Switch
+                                    checked={form.isActive}
+                                    onCheckedChange={(v) =>
+                                        setForm((f) => ({ ...f, isActive: v }))
+                                    }
+                                />
+                            </div>
+                            <div className="flex justify-end gap-2 pt-2">
+                                <Button variant="outline" onClick={() => setOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={handleSave} disabled={saving}>
+                                    {saving ? "Saving…" : editing ? "Update" : "Create"}
+                                </Button>
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label>To Path</Label>
-                            <Input
-                                value={form.toPath}
-                                onChange={(e) =>
-                                    setForm((f) => ({ ...f, toPath: e.target.value }))
-                                }
-                                placeholder="/new-path"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Type</Label>
-                            <Select
-                                value={String(form.type)}
-                                onValueChange={(v) =>
-                                    setForm((f) => ({ ...f, type: Number(v) }))
-                                }
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="301">301 (Permanent)</SelectItem>
-                                    <SelectItem value="302">302 (Temporary)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <Label>Active</Label>
-                            <Switch
-                                checked={form.isActive}
-                                onCheckedChange={(v) =>
-                                    setForm((f) => ({ ...f, isActive: v }))
-                                }
-                            />
-                        </div>
-                        <div className="flex justify-end gap-2 pt-2">
-                            <Button variant="outline" onClick={() => setOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button onClick={handleSave} disabled={saving}>
-                                {saving ? "Saving…" : editing ? "Update" : "Create"}
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </div>
+                    </DialogContent>
+                </Dialog>
+            </div>
+        </>
     );
 }

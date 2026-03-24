@@ -17,9 +17,9 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { apiFetch } from "@/features/shared/api";
+import { ImagePicker } from "@/components/dashboard/image-picker";
 import type { JSONContent } from "@tiptap/react";
 
 const Editor = dynamic(
@@ -50,7 +50,7 @@ export function PageForm({ pageId }: PageFormProps) {
     const [template, setTemplate] = useState<string>("default");
     const [showInNav, setShowInNav] = useState(false);
     const [navOrder, setNavOrder] = useState(0);
-    const [locale, setLocale] = useState("en");
+    const [locale, setLocale] = useState("ja");
 
     // SEO state
     const [seoTitle, setSeoTitle] = useState("");
@@ -175,170 +175,192 @@ export function PageForm({ pageId }: PageFormProps) {
     const seoTitlePlaceholder = title || "Page title";
 
     return (
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-            {/* Main editor area */}
-            <div className="space-y-4">
-                <div className="dash-card rounded-lg p-4 space-y-2">
-                    <Input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Page title"
-                        className="text-2xl font-bold h-14 bg-transparent border-none shadow-none focus-visible:ring-0 px-1 placeholder:text-muted-foreground/40"
-                        style={{ fontFamily: "var(--font-display)", letterSpacing: "0.02em" }}
-                    />
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="shrink-0">Slug:</span>
+        <div className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+                {/* Main editor area */}
+                <div className="space-y-4">
+                    <div className="dash-card rounded-lg p-4 space-y-2">
                         <Input
-                            value={slug}
-                            onChange={(e) => {
-                                setSlugTouched(true);
-                                setSlug(slugify(e.target.value, { lower: true, strict: true }));
-                            }}
-                            placeholder="auto-generated-slug"
-                            className="h-7 text-sm border-dashed border-border/50 bg-transparent"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="Page title"
+                            className="text-2xl font-bold h-14 bg-transparent border-none shadow-none focus-visible:ring-0 px-1 placeholder:text-muted-foreground/40"
+                            style={{ fontFamily: "var(--font-display)", letterSpacing: "0.02em" }}
                         />
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span className="shrink-0">Slug:</span>
+                            <Input
+                                value={slug}
+                                onChange={(e) => {
+                                    setSlugTouched(true);
+                                    setSlug(slugify(e.target.value, { lower: true, strict: true }));
+                                }}
+                                placeholder="auto-generated-slug"
+                                className="h-7 text-sm border-dashed border-border/50 bg-transparent"
+                            />
+                        </div>
                     </div>
+
+                    <Editor
+                        content={initialContent}
+                        onChange={handleEditorChange}
+                        placeholder="Start writing your page content…"
+                    />
                 </div>
 
-                <Editor
-                    content={initialContent}
-                    onChange={handleEditorChange}
-                    placeholder="Start writing your page content…"
-                />
+                {/* Right sidebar */}
+                <div className="space-y-6">
+                    {/* Publish panel */}
+                    <div className="dash-card rounded-lg p-4 space-y-4">
+                        <h3 className="font-semibold text-sm gold-text">Status & Publish</h3>
+                        <Select value={status} onValueChange={setStatus}>
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="draft">Draft</SelectItem>
+                                <SelectItem value="published">Published</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={() => handleSave()}
+                                disabled={saving}
+                                className="flex-1"
+                                variant="outline"
+                            >
+                                {saving ? "Saving…" : "Save Draft"}
+                            </Button>
+                            <Button
+                                onClick={() => handleSave("published")}
+                                disabled={saving}
+                                className="flex-1 btn-gold"
+                            >
+                                Publish
+                            </Button>
+                        </div>
+                        {slug && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-full text-muted-foreground"
+                                onClick={() => window.open(`/${slug}`, "_blank")}
+                            >
+                                Preview in new tab ↗
+                            </Button>
+                        )}
+                    </div>
+
+                    {/* Template */}
+                    <div className="dash-card rounded-lg p-4 space-y-3">
+                        <h3 className="font-semibold text-sm gold-text">Template</h3>
+                        <Select value={template} onValueChange={setTemplate}>
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="default">Default</SelectItem>
+                                <SelectItem value="full-width">Full Width</SelectItem>
+                                <SelectItem value="contact">Contact</SelectItem>
+                                <SelectItem value="blank">Blank</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Settings */}
+                    <div className="dash-card rounded-lg p-4 space-y-4">
+                        <h3 className="font-semibold text-sm gold-text">Settings</h3>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="showInNav" className="text-sm">Show in Navigation</Label>
+                            <Switch id="showInNav" checked={showInNav} onCheckedChange={setShowInNav} />
+                        </div>
+                        {showInNav && (
+                            <>
+                                <Separator />
+                                <div className="space-y-2">
+                                    <Label className="text-sm">Nav Order</Label>
+                                    <Input
+                                        type="number"
+                                        value={navOrder}
+                                        onChange={(e) => setNavOrder(Number(e.target.value))}
+                                    />
+                                </div>
+                            </>
+                        )}
+                        <Separator />
+                        <div className="space-y-2">
+                            <Label className="text-sm">Locale</Label>
+                            <Select value={locale} onValueChange={setLocale}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="en">English</SelectItem>
+                                    <SelectItem value="ja">日本語</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            {/* Right sidebar */}
-            <div className="space-y-6">
-                {/* Publish panel */}
-                <div className="dash-card rounded-lg p-4 space-y-4">
-                    <h3 className="font-semibold text-sm gold-text">Status & Publish</h3>
-                    <Select value={status} onValueChange={setStatus}>
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="draft">Draft</SelectItem>
-                            <SelectItem value="published">Published</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={() => handleSave()}
-                            disabled={saving}
-                            className="flex-1"
-                            variant="outline"
-                        >
-                            {saving ? "Saving…" : "Save Draft"}
-                        </Button>
-                        <Button
-                            onClick={() => handleSave("published")}
-                            disabled={saving}
-                            className="flex-1 btn-gold"
-                        >
-                            Publish
-                        </Button>
+            {/* SEO — Full Width */}
+            <div className="dash-card rounded-lg p-6 space-y-5">
+                <div>
+                    <h3 className="font-semibold text-sm gold-text">SEO</h3>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                        SEO fields auto-fill from the page. Override below if needed.
+                    </p>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-xs">Meta Title</Label>
+                            <Input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder={seoTitlePlaceholder} className="h-8 text-sm" />
+                            <span className="text-[10px] text-muted-foreground">{(seoTitle || title).length}/60</span>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-xs">Meta Description</Label>
+                            <Textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} placeholder="Page description for search engines" rows={2} className="text-sm" />
+                            <span className="text-[10px] text-muted-foreground">{seoDescription.length}/160</span>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-xs">Keywords</Label>
+                            <Input value={seoKeywords} onChange={(e) => setSeoKeywords(e.target.value)} placeholder="keyword1, keyword2" className="h-8 text-sm" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-xs">Canonical URL</Label>
+                            <Input value={canonicalUrl} onChange={(e) => setCanonicalUrl(e.target.value)} placeholder="Leave empty for default" className="h-8 text-sm" />
+                        </div>
                     </div>
-                </div>
-
-                {/* Template */}
-                <div className="dash-card rounded-lg p-4 space-y-3">
-                    <h3 className="font-semibold text-sm gold-text">Template</h3>
-                    <Select value={template} onValueChange={setTemplate}>
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="default">Default</SelectItem>
-                            <SelectItem value="full-width">Full Width</SelectItem>
-                            <SelectItem value="contact">Contact</SelectItem>
-                            <SelectItem value="blank">Blank</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                {/* Settings + SEO tabs */}
-                <div className="dash-card rounded-lg">
-                    <Tabs defaultValue="settings">
-                        <TabsList className="w-full grid grid-cols-2 rounded-b-none">
-                            <TabsTrigger value="settings" className="text-xs">Settings</TabsTrigger>
-                            <TabsTrigger value="seo" className="text-xs">SEO</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="settings" className="p-4 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="showInNav" className="text-sm">Show in Navigation</Label>
-                                <Switch id="showInNav" checked={showInNav} onCheckedChange={setShowInNav} />
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-xs">OG Title</Label>
+                            <Input value={ogTitle} onChange={(e) => setOgTitle(e.target.value)} placeholder={seoTitle || title || "Same as meta title"} className="h-8 text-sm" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-xs">OG Description</Label>
+                            <Textarea value={ogDescription} onChange={(e) => setOgDescription(e.target.value)} placeholder={seoDescription || "Same as meta description"} rows={2} className="text-sm" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-xs">OG Image</Label>
+                            <ImagePicker
+                                value={ogImage}
+                                onChange={setOgImage}
+                                placeholder="Image URL for social sharing"
+                            />
+                        </div>
+                        <Separator />
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-2">
+                                <Switch id="noIndex" checked={noIndex} onCheckedChange={setNoIndex} />
+                                <Label htmlFor="noIndex" className="text-xs">No Index</Label>
                             </div>
-                            {showInNav && (
-                                <>
-                                    <Separator />
-                                    <div className="space-y-2">
-                                        <Label className="text-sm">Nav Order</Label>
-                                        <Input
-                                            type="number"
-                                            value={navOrder}
-                                            onChange={(e) => setNavOrder(Number(e.target.value))}
-                                        />
-                                    </div>
-                                </>
-                            )}
-                            <Separator />
-                            <div className="space-y-2">
-                                <Label className="text-sm">Locale</Label>
-                                <Select value={locale} onValueChange={setLocale}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="en">English</SelectItem>
-                                        <SelectItem value="ja">日本語</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                            <div className="flex items-center gap-2">
+                                <Switch id="noFollow" checked={noFollow} onCheckedChange={setNoFollow} />
+                                <Label htmlFor="noFollow" className="text-xs">No Follow</Label>
                             </div>
-                        </TabsContent>
-                        <TabsContent value="seo" className="p-4 space-y-4">
-                            <p className="text-[11px] text-muted-foreground">
-                                SEO fields auto-fill from the page. Override below if needed.
-                            </p>
-                            <div className="space-y-2">
-                                <Label className="text-xs">Meta Title</Label>
-                                <Input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder={seoTitlePlaceholder} className="h-8 text-sm" />
-                                <span className="text-[10px] text-muted-foreground">{(seoTitle || title).length}/60</span>
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs">Meta Description</Label>
-                                <Textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} placeholder="Page description for search engines" rows={2} className="text-sm" />
-                                <span className="text-[10px] text-muted-foreground">{seoDescription.length}/160</span>
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs">Keywords</Label>
-                                <Input value={seoKeywords} onChange={(e) => setSeoKeywords(e.target.value)} placeholder="keyword1, keyword2" className="h-8 text-sm" />
-                            </div>
-                            <Separator />
-                            <div className="space-y-2">
-                                <Label className="text-xs">OG Title</Label>
-                                <Input value={ogTitle} onChange={(e) => setOgTitle(e.target.value)} placeholder={seoTitle || title || "Same as meta title"} className="h-8 text-sm" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs">OG Description</Label>
-                                <Textarea value={ogDescription} onChange={(e) => setOgDescription(e.target.value)} placeholder={seoDescription || "Same as meta description"} rows={2} className="text-sm" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs">OG Image URL</Label>
-                                <Input value={ogImage} onChange={(e) => setOgImage(e.target.value)} placeholder="Image URL for social sharing" className="h-8 text-sm" />
-                            </div>
-                            <Separator />
-                            <div className="space-y-2">
-                                <Label className="text-xs">Canonical URL</Label>
-                                <Input value={canonicalUrl} onChange={(e) => setCanonicalUrl(e.target.value)} placeholder="Leave empty for default" className="h-8 text-sm" />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <Label className="text-xs">No Index</Label>
-                                <Switch checked={noIndex} onCheckedChange={setNoIndex} />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <Label className="text-xs">No Follow</Label>
-                                <Switch checked={noFollow} onCheckedChange={setNoFollow} />
-                            </div>
-                        </TabsContent>
-                    </Tabs>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

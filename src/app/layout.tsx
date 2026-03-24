@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Geist, Geist_Mono, Inter, Bebas_Neue, Noto_Sans_JP, Noto_Serif_JP } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryProvider } from "@/lib/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -114,12 +117,17 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ClerkProvider>
-          <TooltipProvider>
-            {children}
-          </TooltipProvider>
+          <QueryProvider>
+            <TooltipProvider>
+              <Suspense>
+                {children}
+              </Suspense>
+            </TooltipProvider>
+          </QueryProvider>
           <Toaster richColors position="top-right" />
         </ClerkProvider>
       </body>
+      <GoogleAnalytics gaId="G-Z6KPXL8DJX" />
     </html>
   );
 }
