@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth";
 import { apiRoute } from "@/lib/api-utils";
 import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
+import { revalidateTag } from "next/cache";
 
 const upsertSettingSchema = z.object({
     key: z.string().min(1).max(100),
@@ -53,6 +54,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
             }
         }
 
+        revalidateTag("website-config", "max");
         return NextResponse.json({ message: "Settings updated" });
     }
 
@@ -82,5 +84,6 @@ export const POST = apiRoute(async (request: NextRequest) => {
         });
     }
 
+    revalidateTag("website-config", "max");
     return NextResponse.json({ message: "Setting saved" });
 });

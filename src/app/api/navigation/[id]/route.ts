@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth";
 import { apiRoute } from "@/lib/api-utils";
 import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
+import { revalidateTag } from "next/cache";
 
 const updateNavSchema = z.object({
     label: z.string().min(1).max(100).optional(),
@@ -42,6 +43,7 @@ export const PATCH = apiRoute(async (request: NextRequest,
         return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    revalidateTag("website-config", "max");
     return NextResponse.json({ data: updated });
 });
 
@@ -59,5 +61,6 @@ export const DELETE = apiRoute(async (_request: NextRequest,
         return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    revalidateTag("website-config", "max");
     return NextResponse.json({ data: deleted });
 });

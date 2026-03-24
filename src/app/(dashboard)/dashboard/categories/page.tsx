@@ -21,8 +21,60 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import {
+    MapPin, Compass, Camera, Globe, Plane, Mountain, Palmtree, Sun, Moon, Star,
+    Heart, BookOpen, Music, Coffee, Utensils, ShoppingBag, Building, Car, Train,
+    Bike, Ship, Tent, Umbrella, Waves, Flame, Snowflake, Cloud, Sparkles,
+    Trophy, Flag, Map, Landmark, TreePine, Flower, Bird, Fish, Dog, Cat, type LucideIcon,
+} from "lucide-react";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useCategories, type Category } from "@/features/categories/hooks/useCategories";
+
+const ICON_OPTIONS: { name: string; Icon: LucideIcon }[] = [
+    { name: "map-pin", Icon: MapPin },
+    { name: "compass", Icon: Compass },
+    { name: "camera", Icon: Camera },
+    { name: "globe", Icon: Globe },
+    { name: "plane", Icon: Plane },
+    { name: "mountain", Icon: Mountain },
+    { name: "palmtree", Icon: Palmtree },
+    { name: "sun", Icon: Sun },
+    { name: "moon", Icon: Moon },
+    { name: "star", Icon: Star },
+    { name: "heart", Icon: Heart },
+    { name: "book-open", Icon: BookOpen },
+    { name: "music", Icon: Music },
+    { name: "coffee", Icon: Coffee },
+    { name: "utensils", Icon: Utensils },
+    { name: "shopping-bag", Icon: ShoppingBag },
+    { name: "building", Icon: Building },
+    { name: "car", Icon: Car },
+    { name: "train", Icon: Train },
+    { name: "bike", Icon: Bike },
+    { name: "ship", Icon: Ship },
+    { name: "tent", Icon: Tent },
+    { name: "umbrella", Icon: Umbrella },
+    { name: "waves", Icon: Waves },
+    { name: "flame", Icon: Flame },
+    { name: "snowflake", Icon: Snowflake },
+    { name: "cloud", Icon: Cloud },
+    { name: "sparkles", Icon: Sparkles },
+    { name: "trophy", Icon: Trophy },
+    { name: "flag", Icon: Flag },
+    { name: "map", Icon: Map },
+    { name: "landmark", Icon: Landmark },
+    { name: "tree-pine", Icon: TreePine },
+    { name: "flower", Icon: Flower },
+    { name: "bird", Icon: Bird },
+    { name: "fish", Icon: Fish },
+    { name: "dog", Icon: Dog },
+    { name: "cat", Icon: Cat },
+];
+
+function getIconComponent(name: string | null): LucideIcon | null {
+    if (!name) return null;
+    return ICON_OPTIONS.find((o) => o.name === name)?.Icon ?? null;
+}
 
 export default function CategoriesPage() {
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -31,6 +83,7 @@ export default function CategoriesPage() {
         name: "",
         description: "",
         color: "#b91c1c",
+        icon: "",
         sortOrder: 0,
     });
 
@@ -44,7 +97,7 @@ export default function CategoriesPage() {
 
     function openCreate() {
         setEditing(null);
-        setForm({ name: "", description: "", color: "#b91c1c", sortOrder: 0 });
+        setForm({ name: "", description: "", color: "#b91c1c", icon: "", sortOrder: 0 });
         setDialogOpen(true);
     }
 
@@ -54,6 +107,7 @@ export default function CategoriesPage() {
             name: cat.name,
             description: cat.description ?? "",
             color: cat.color ?? "#b91c1c",
+            icon: cat.icon ?? "",
             sortOrder: cat.sortOrder,
         });
         setDialogOpen(true);
@@ -61,11 +115,15 @@ export default function CategoriesPage() {
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        const payload = {
+            ...form,
+            icon: form.icon || undefined,
+        };
         try {
             if (editing) {
-                await update(editing.id, form);
+                await update(editing.id, payload);
             } else {
-                await create(form);
+                await create(payload);
             }
             setDialogOpen(false);
         } catch {
@@ -82,6 +140,8 @@ export default function CategoriesPage() {
         }
     }
 
+    const SelectedIcon = getIconComponent(form.icon);
+
     return (
         <>
             <ConfirmDialog />
@@ -95,13 +155,35 @@ export default function CategoriesPage() {
                         <DialogTrigger asChild>
                             <Button onClick={openCreate} className="btn-gold">Add Category</Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="sm:max-w-lg">
                             <DialogHeader>
                                 <DialogTitle>
                                     {editing ? "Edit Category" : "New Category"}
                                 </DialogTitle>
                             </DialogHeader>
-                            <form onSubmit={handleSubmit} className="space-y-4">
+                            <form onSubmit={handleSubmit} className="space-y-5">
+                                {/* Preview */}
+                                <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/50 border border-border">
+                                    <div
+                                        className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                                        style={{ backgroundColor: form.color + "20", color: form.color }}
+                                    >
+                                        {SelectedIcon ? (
+                                            <SelectedIcon className="w-6 h-6" />
+                                        ) : (
+                                            <div className="w-6 h-6 rounded-full" style={{ backgroundColor: form.color }} />
+                                        )}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="font-semibold text-sm truncate">
+                                            {form.name || "Category Name"}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground truncate">
+                                            {form.description || "Description preview"}
+                                        </p>
+                                    </div>
+                                </div>
+
                                 <div className="space-y-2">
                                     <Label htmlFor="name">Name</Label>
                                     <Input
@@ -123,13 +205,15 @@ export default function CategoriesPage() {
                                             setForm({ ...form, description: e.target.value })
                                         }
                                         placeholder="Optional description"
-                                        rows={3}
+                                        rows={2}
                                     />
                                 </div>
-                                <div className="flex gap-4">
+
+                                {/* Color & Sort Order */}
+                                <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="color">Color</Label>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 h-9">
                                             <input
                                                 type="color"
                                                 id="color"
@@ -137,14 +221,14 @@ export default function CategoriesPage() {
                                                 onChange={(e) =>
                                                     setForm({ ...form, color: e.target.value })
                                                 }
-                                                className="h-9 w-9 cursor-pointer rounded border"
+                                                className="h-9 w-9 cursor-pointer rounded border shrink-0"
                                             />
                                             <Input
                                                 value={form.color}
                                                 onChange={(e) =>
                                                     setForm({ ...form, color: e.target.value })
                                                 }
-                                                className="w-28"
+                                                className="font-mono text-sm h-9"
                                             />
                                         </div>
                                     </div>
@@ -160,11 +244,48 @@ export default function CategoriesPage() {
                                                     sortOrder: parseInt(e.target.value) || 0,
                                                 })
                                             }
-                                            className="w-24"
+                                            className="h-9"
                                         />
                                     </div>
                                 </div>
-                                <div className="flex justify-end gap-2">
+
+                                {/* Icon picker */}
+                                <div className="space-y-2">
+                                    <Label>Icon</Label>
+                                    <div className="grid grid-cols-8 gap-1.5 max-h-[160px] overflow-y-auto rounded-lg border p-2">
+                                        {/* No icon option */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setForm({ ...form, icon: "" })}
+                                            className={`w-8 h-8 rounded-md flex items-center justify-center text-xs transition-colors ${!form.icon
+                                                ? "bg-primary text-primary-foreground"
+                                                : "hover:bg-muted text-muted-foreground"
+                                                }`}
+                                            title="No icon"
+                                        >
+                                            ✕
+                                        </button>
+                                        {ICON_OPTIONS.map(({ name, Icon }) => (
+                                            <button
+                                                key={name}
+                                                type="button"
+                                                onClick={() => setForm({ ...form, icon: name })}
+                                                className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors ${form.icon === name
+                                                    ? "bg-primary text-primary-foreground"
+                                                    : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                                                    }`}
+                                                title={name}
+                                            >
+                                                <Icon className="w-4 h-4" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground">
+                                        {form.icon ? `Selected: ${form.icon}` : "No icon selected"}
+                                    </p>
+                                </div>
+
+                                <div className="flex justify-end gap-2 pt-2">
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -185,10 +306,10 @@ export default function CategoriesPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Color</TableHead>
+                                <TableHead className="w-[60px]">Icon</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Slug</TableHead>
-                                <TableHead>Order</TableHead>
+                                <TableHead className="w-[60px]">Order</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -213,40 +334,55 @@ export default function CategoriesPage() {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                categories.map((cat) => (
-                                    <TableRow key={cat.id}>
-                                        <TableCell>
-                                            <div
-                                                className="h-5 w-5 rounded-full border"
-                                                style={{ backgroundColor: cat.color ?? "#ccc" }}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="font-medium">{cat.name}</TableCell>
-                                        <TableCell className="text-muted-foreground">
-                                            {cat.slug}
-                                        </TableCell>
-                                        <TableCell>{cat.sortOrder}</TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => openEdit(cat)}
+                                categories.map((cat) => {
+                                    const CatIcon = getIconComponent(cat.icon);
+                                    return (
+                                        <TableRow key={cat.id}>
+                                            <TableCell>
+                                                <div
+                                                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                                                    style={{
+                                                        backgroundColor: (cat.color ?? "#ccc") + "20",
+                                                        color: cat.color ?? "#ccc",
+                                                    }}
                                                 >
-                                                    Edit
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-destructive hover:text-destructive/80"
-                                                    onClick={() => handleDelete(cat.id)}
-                                                >
-                                                    Delete
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                                    {CatIcon ? (
+                                                        <CatIcon className="w-4 h-4" />
+                                                    ) : (
+                                                        <div
+                                                            className="w-4 h-4 rounded-full"
+                                                            style={{ backgroundColor: cat.color ?? "#ccc" }}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="font-medium">{cat.name}</TableCell>
+                                            <TableCell className="text-muted-foreground text-sm">
+                                                {cat.slug}
+                                            </TableCell>
+                                            <TableCell>{cat.sortOrder}</TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => openEdit(cat)}
+                                                    >
+                                                        Edit
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-destructive hover:text-destructive/80"
+                                                        onClick={() => handleDelete(cat.id)}
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
                             )}
                         </TableBody>
                     </Table>

@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth";
 import { apiRoute } from "@/lib/api-utils";
 import { eq, asc } from "drizzle-orm";
 import { z } from "zod/v4";
+import { revalidateTag } from "next/cache";
 
 const createNavSchema = z.object({
     label: z.string().min(1).max(100),
@@ -59,5 +60,6 @@ export const POST = apiRoute(async (request: NextRequest) => {
         })
         .returning();
 
+    revalidateTag("website-config", "max");
     return NextResponse.json({ data: item }, { status: 201 });
 });

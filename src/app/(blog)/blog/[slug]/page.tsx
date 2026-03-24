@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Clock } from "lucide-react";
+import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import {
     articles,
@@ -23,16 +24,35 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
 
-    const [article] = await db
+    // Try published first, then any status for authenticated preview
+    let [article] = await db
         .select({
             title: articles.title,
             excerpt: articles.excerpt,
             coverImage: articles.coverImage,
             id: articles.id,
+            status: articles.status,
         })
         .from(articles)
         .where(and(eq(articles.slug, slug), eq(articles.status, "published")))
         .limit(1);
+
+    if (!article) {
+        const { userId } = await auth();
+        if (userId) {
+            [article] = await db
+                .select({
+                    title: articles.title,
+                    excerpt: articles.excerpt,
+                    coverImage: articles.coverImage,
+                    id: articles.id,
+                    status: articles.status,
+                })
+                .from(articles)
+                .where(eq(articles.slug, slug))
+                .limit(1);
+        }
+    }
 
     if (!article) return { title: "Not Found" };
 
@@ -89,7 +109,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ArticlePage({ params }: Props) {
     const { slug } = await params;
 
-    const [article] = await db
+    // Try published first
+    let [article] = await db
         .select({
             id: articles.id,
             title: articles.title,
@@ -103,13 +124,44 @@ export default async function ArticlePage({ params }: Props) {
             categoryName: categories.name,
             categorySlug: categories.slug,
             authorId: articles.authorId,
+            status: articles.status,
         })
         .from(articles)
         .leftJoin(categories, eq(articles.categoryId, categories.id))
         .where(and(eq(articles.slug, slug), eq(articles.status, "published")))
         .limit(1);
 
-    if (!article) notFound();
+    let isPreview = false;
+
+    // If not published, check for draft + auth
+    if (!article) {
+        const { userId } = await auth();
+        if (!userId) notFound();
+
+        [article] = await db
+            .select({
+                id: articles.id,
+                title: articles.title,
+                slug: articles.slug,
+                excerpt: articles.excerpt,
+                contentHtml: articles.contentHtml,
+                coverImage: articles.coverImage,
+                publishedAt: articles.publishedAt,
+                readingTime: articles.readingTime,
+                categoryId: articles.categoryId,
+                categoryName: categories.name,
+                categorySlug: categories.slug,
+                authorId: articles.authorId,
+                status: articles.status,
+            })
+            .from(articles)
+            .leftJoin(categories, eq(articles.categoryId, categories.id))
+            .where(eq(articles.slug, slug))
+            .limit(1);
+
+        if (!article) notFound();
+        isPreview = true;
+    }
 
     // Get tags
     const articleTagList = await db
@@ -214,6 +266,12 @@ export default async function ArticlePage({ params }: Props) {
             />
 
             <main className="min-h-screen">
+                {isPreview && (
+                    <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-amber-950 text-center py-2 px-4 text-sm font-medium">
+                        プレビューモード — この記事はまだ公開されていません (Status: {article.status})
+                    </div>
+                )}
+
                 {/* Hero Section */}
                 <section className="relative pt-20">
                     <div className="relative h-[50vh] md:h-[70vh]">

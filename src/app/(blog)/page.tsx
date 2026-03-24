@@ -12,53 +12,112 @@ import { Button } from "@/components/ui/button";
 import { NewsletterForm } from "@/features/blog/components/newsletter-form";
 import { db } from "@/lib/db";
 import { articles, categories } from "@/lib/db/schema";
+import { getWebsiteConfig } from "@/lib/config/get-website-config";
 import { desc, eq } from "drizzle-orm";
 
-const features = [
-    {
-        icon: MapPin,
-        title: "未知の地を探索",
-        description:
-            "誰も知らない秘密の場所、地図にない絶景スポットをご紹介します。",
-    },
-    {
-        icon: Compass,
-        title: "冒険のガイド",
-        description:
-            "初心者から上級者まで、あなたの旅をサポートする詳細なガイド。",
-    },
-    {
-        icon: Camera,
-        title: "美しい瞬間",
-        description: "息をのむような写真と共に、旅の感動をお届けします。",
-    },
-];
+// ---- Default landing page content (fallbacks) ----
 
-const testimonials = [
-    {
-        name: "田中 美咲",
-        role: "フォトグラファー",
-        content:
-            "ラクダイルの記事に触発されて、ついにサハラ砂漠への旅を実現しました。人生を変える経験でした。",
-        rating: 5,
-    },
-    {
-        name: "佐藤 健太",
-        role: "バックパッカー",
-        content:
-            "詳細な旅行ガイドのおかげで、安心して冒険に出かけることができました。本当に感謝しています。",
-        rating: 5,
-    },
-    {
-        name: "山田 花子",
-        role: "旅行愛好家",
-        content:
-            "美しい写真と心に響く文章。毎回の更新を楽しみにしています。",
-        rating: 5,
-    },
-];
+const defaultHero = {
+    badgeText: "新しい冒険が始まる",
+    title: "砂漠の風に導かれ、",
+    titleHighlight: "未知なる世界",
+    titleSuffix: "へ",
+    description:
+        "ラクダイルは、世界中の砂漠、オアシス、そして冒険の旅をお届けする日本語トラベルブログです。あなたの次の旅を、特別なものに。",
+    ctaText: "冒険を始める",
+    ctaLink: "/blog",
+    secondaryCtaText: "私たちについて",
+    secondaryCtaLink: "/about",
+    heroImage: "/hero-desert.jpg",
+    heroImageAlt: "サハラ砂漠の美しい風景",
+};
+
+const defaultFeatures = {
+    heading: "なぜラクダイル？",
+    description:
+        "私たちは単なる旅行ブログではありません。あなたの冒険心を刺激し、夢を現実にするためのインスピレーションをお届けします。",
+    items: [
+        {
+            icon: "map-pin",
+            title: "未知の地を探索",
+            description:
+                "誰も知らない秘密の場所、地図にない絶景スポットをご紹介します。",
+        },
+        {
+            icon: "compass",
+            title: "冒険のガイド",
+            description:
+                "初心者から上級者まで、あなたの旅をサポートする詳細なガイド。",
+        },
+        {
+            icon: "camera",
+            title: "美しい瞬間",
+            description: "息をのむような写真と共に、旅の感動をお届けします。",
+        },
+    ],
+};
+
+const defaultTestimonials = {
+    heading: "読者の声",
+    description: "ラクダイルと一緒に旅をした読者の皆様からの温かいメッセージ",
+    items: [
+        {
+            name: "田中 美咲",
+            role: "フォトグラファー",
+            content:
+                "ラクダイルの記事に触発されて、ついにサハラ砂漠への旅を実現しました。人生を変える経験でした。",
+            rating: 5,
+        },
+        {
+            name: "佐藤 健太",
+            role: "バックパッカー",
+            content:
+                "詳細な旅行ガイドのおかげで、安心して冒険に出かけることができました。本当に感謝しています。",
+            rating: 5,
+        },
+        {
+            name: "山田 花子",
+            role: "旅行愛好家",
+            content:
+                "美しい写真と心に響く文章。毎回の更新を楽しみにしています。",
+            rating: 5,
+        },
+    ],
+};
+
+const defaultCta = {
+    title: "次の冒険を一緒に計画しませんか？",
+    description:
+        "ニュースレターに登録して、最新の旅行記、特別なガイド、そしてここでしか読めないコンテンツを受け取りましょう。",
+};
+
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    "map-pin": MapPin,
+    compass: Compass,
+    camera: Camera,
+};
 
 export default async function HomePage() {
+    // Use centralized cached config — no extra DB hit
+    const config = await getWebsiteConfig();
+    const landing = (config.settings.landingPage ?? {}) as Record<string, unknown>;
+    const hero = { ...defaultHero, ...(landing.hero as Record<string, string> | undefined) };
+    const features = {
+        ...defaultFeatures,
+        ...(landing.features as Record<string, unknown> | undefined),
+        items: (landing.features as Record<string, unknown> | undefined)?.items
+            ? ((landing.features as Record<string, unknown>).items as typeof defaultFeatures.items)
+            : defaultFeatures.items,
+    };
+    const testimonials = {
+        ...defaultTestimonials,
+        ...(landing.testimonials as Record<string, unknown> | undefined),
+        items: (landing.testimonials as Record<string, unknown> | undefined)?.items
+            ? ((landing.testimonials as Record<string, unknown>).items as typeof defaultTestimonials.items)
+            : defaultTestimonials.items,
+    };
+    const cta = { ...defaultCta, ...(landing.cta as Record<string, string> | undefined) };
+
     // Fetch latest 3 published articles for featured posts
     const featuredPosts = await db
         .select({
@@ -82,8 +141,8 @@ export default async function HomePage() {
             <section className="relative min-h-screen flex items-center justify-center pt-20">
                 <div className="absolute inset-0 z-0">
                     <Image
-                        src="/hero-desert.jpg"
-                        alt="サハラ砂漠の美しい風景"
+                        src={hero.heroImage}
+                        alt={hero.heroImageAlt}
                         fill
                         className="object-cover"
                         priority
@@ -95,19 +154,18 @@ export default async function HomePage() {
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
                         <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                         <span className="text-sm text-primary font-medium">
-                            新しい冒険が始まる
+                            {hero.badgeText}
                         </span>
                     </div>
 
                     <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 text-balance leading-tight">
-                        砂漠の風に導かれ、
+                        {hero.title}
                         <br />
-                        <span className="text-primary">未知なる世界</span>へ
+                        <span className="text-primary">{hero.titleHighlight}</span>{hero.titleSuffix}
                     </h1>
 
                     <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-                        ラクダイルは、世界中の砂漠、オアシス、そして冒険の旅をお届けする
-                        日本語トラベルブログです。あなたの次の旅を、特別なものに。
+                        {hero.description}
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -116,8 +174,8 @@ export default async function HomePage() {
                             className="bg-primary hover:bg-primary/90 text-primary-foreground px-8"
                             asChild
                         >
-                            <Link href="/blog">
-                                冒険を始める
+                            <Link href={hero.ctaLink}>
+                                {hero.ctaText}
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Link>
                         </Button>
@@ -127,7 +185,7 @@ export default async function HomePage() {
                             className="border-foreground/20"
                             asChild
                         >
-                            <Link href="/about">私たちについて</Link>
+                            <Link href={hero.secondaryCtaLink}>{hero.secondaryCtaText}</Link>
                         </Button>
                     </div>
                 </div>
@@ -146,31 +204,33 @@ export default async function HomePage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
-                            なぜラクダイル？
+                            {features.heading}
                         </h2>
                         <p className="text-muted-foreground max-w-2xl mx-auto">
-                            私たちは単なる旅行ブログではありません。あなたの冒険心を刺激し、
-                            夢を現実にするためのインスピレーションをお届けします。
+                            {features.description}
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {features.map((feature, index) => (
-                            <div
-                                key={index}
-                                className="bg-card rounded-2xl p-8 border border-border hover:border-primary/30 transition-all hover:shadow-lg group"
-                            >
-                                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                                    <feature.icon className="w-7 h-7 text-primary group-hover:text-primary-foreground" />
+                        {features.items.map((feature, index) => {
+                            const FeatureIcon = iconMap[feature.icon] ?? MapPin;
+                            return (
+                                <div
+                                    key={index}
+                                    className="bg-card rounded-2xl p-8 border border-border hover:border-primary/30 transition-all hover:shadow-lg group"
+                                >
+                                    <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                        <FeatureIcon className="w-7 h-7 text-primary group-hover:text-primary-foreground" />
+                                    </div>
+                                    <h3 className="font-serif text-xl font-bold text-foreground mb-3">
+                                        {feature.title}
+                                    </h3>
+                                    <p className="text-muted-foreground leading-relaxed">
+                                        {feature.description}
+                                    </p>
                                 </div>
-                                <h3 className="font-serif text-xl font-bold text-foreground mb-3">
-                                    {feature.title}
-                                </h3>
-                                <p className="text-muted-foreground leading-relaxed">
-                                    {feature.description}
-                                </p>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </section>
@@ -263,15 +323,15 @@ export default async function HomePage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">
-                            読者の声
+                            {testimonials.heading}
                         </h2>
                         <p className="text-primary-foreground/80 max-w-2xl mx-auto">
-                            ラクダイルと一緒に旅をした読者の皆様からの温かいメッセージ
+                            {testimonials.description}
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {testimonials.map((testimonial, index) => (
+                        {testimonials.items.map((testimonial, index) => (
                             <div
                                 key={index}
                                 className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-8 border border-primary-foreground/20"
@@ -311,11 +371,10 @@ export default async function HomePage() {
                         />
                     </div>
                     <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-6">
-                        次の冒険を一緒に計画しませんか？
+                        {cta.title}
                     </h2>
                     <p className="text-muted-foreground text-lg mb-10 max-w-2xl mx-auto">
-                        ニュースレターに登録して、最新の旅行記、特別なガイド、
-                        そしてここでしか読めないコンテンツを受け取りましょう。
+                        {cta.description}
                     </p>
                     <NewsletterForm variant="inline" />
                 </div>

@@ -1,16 +1,22 @@
+import { getWebsiteConfig } from "@/lib/config/get-website-config";
+import { WebsiteConfigProvider } from "@/lib/config";
 import { Header } from "@/features/blog/components/header";
 import { Footer } from "@/features/blog/components/footer";
 
-export default function BlogLayout({
+export default async function BlogLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const config = await getWebsiteConfig();
+
     return (
-        <div className="blog min-h-screen flex flex-col">
-            <Header />
-            <div className="flex-1">{children}</div>
-            <Footer />
-        </div>
+        <WebsiteConfigProvider config={config}>
+            <div className="blog min-h-screen flex flex-col">
+                <Header />
+                <div className="flex-1">{children}</div>
+                <Footer />
+            </div>
+        </WebsiteConfigProvider>
     );
 }

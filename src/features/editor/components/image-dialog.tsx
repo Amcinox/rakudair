@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, type DragEvent } from "react";
+import { useState, useRef, useCallback, useEffect, type DragEvent } from "react";
 import Image from "next/image";
 import {
     Dialog,
@@ -17,6 +17,14 @@ import type { OurFileRouter } from "@/lib/uploadthing";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
+type MediaItem = {
+    id: string;
+    url: string;
+    filename: string;
+    altText: string | null;
+    mimeType: string;
+};
+
 interface ImageDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -24,7 +32,7 @@ interface ImageDialogProps {
 }
 
 export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) {
-    const [tab, setTab] = useState<"upload" | "url">("upload");
+    const [tab, setTab] = useState<"upload" | "url" | "assets">("upload");
     const [url, setUrl] = useState("");
     const [alt, setAlt] = useState("");
     const [preview, setPreview] = useState<string | null>(null);
@@ -32,6 +40,12 @@ export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) 
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
     const fileRef = useRef<HTMLInputElement>(null);
+
+    // Assets state
+    const [assets, setAssets] = useState<MediaItem[]>([]);
+    const [assetsLoading, setAssetsLoading] = useState(false);
+    const [assetsSearch, setAssetsSearch] = useState("");
+    const [selectedAsset, setSelectedAsset] = useState<MediaItem | null>(null);
 
     const { startUpload } = useUploadThing("imageUploader", {
         onUploadProgress: (p) => setProgress(p),
@@ -45,12 +59,38 @@ export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) 
         setUploading(false);
         setProgress(0);
         setDragActive(false);
+        setSelectedAsset(null);
+        setAssetsSearch("");
     }, []);
 
     const handleOpenChange = (v: boolean) => {
         if (!v) reset();
         onOpenChange(v);
     };
+
+    // Fetch assets when dialog opens
+    useEffect(() => {
+        if (!open) return;
+        setAssetsLoading(true);
+        fetch("/api/media?limit=100")
+            .then((r) => r.json())
+            .then((json) => {
+                const items = (json.data ?? []).filter((m: MediaItem) =>
+                    m.mimeType?.startsWith("image/"),
+                );
+                setAssets(items);
+            })
+            .catch(() => { })
+            .finally(() => setAssetsLoading(false));
+    }, [open]);
+
+    const filteredAssets = assetsSearch
+        ? assets.filter(
+            (a) =>
+                a.filename?.toLowerCase().includes(assetsSearch.toLowerCase()) ||
+                a.altText?.toLowerCase().includes(assetsSearch.toLowerCase()),
+        )
+        : assets;
 
     const upload = async (files: File[]) => {
         if (!files.length) return;
@@ -86,43 +126,48 @@ export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) 
     };
 
     const handleInsert = () => {
+        if (selectedAsset && tab === "assets") {
+            onInsert(selectedAsset.url, selectedAsset.altText || undefined);
+            handleOpenChange(false);
+            return;
+        }
         if (!url.trim()) return;
         onInsert(url.trim(), alt.trim() || undefined);
         handleOpenChange(false);
     };
 
+    const selectAsset = (asset: MediaItem) => {
+        setSelectedAsset(asset);
+        setUrl(asset.url);
+        setAlt(asset.altText ?? "");
+        setPreview(asset.url);
+    };
+
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Insert Image</DialogTitle>
                     <DialogDescription>
-                        Upload an image or paste a URL
+                        Upload, pick from assets, or paste a URL
                     </DialogDescription>
                 </DialogHeader>
 
                 {/* Tabs */}
                 <div className="flex gap-1 rounded-lg bg-muted p-1">
-                    <button
-                        type="button"
-                        onClick={() => setTab("upload")}
-                        className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${tab === "upload"
-                                ? "bg-background text-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-foreground"
-                            }`}
-                    >
-                        Upload
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setTab("url")}
-                        className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${tab === "url"
-                                ? "bg-background text-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-foreground"
-                            }`}
-                    >
-                        URL
-                    </button>
+                    {(["upload", "assets", "url"] as const).map((t) => (
+                        <button
+                            key={t}
+                            type="button"
+                            onClick={() => { setTab(t); if (t !== "assets") setSelectedAsset(null); }}
+                            className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${tab === t
+                                    ? "bg-background text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
+                                }`}
+                        >
+                            {t === "upload" ? "Upload" : t === "assets" ? "Assets" : "URL"}
+                        </button>
+                    ))}
                 </div>
 
                 {tab === "upload" && (
@@ -169,6 +214,58 @@ export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) 
                             onChange={handleFileChange}
                             className="hidden"
                         />
+                    </div>
+                )}
+
+                {tab === "assets" && (
+                    <div className="space-y-3">
+                        <Input
+                            value={assetsSearch}
+                            onChange={(e) => setAssetsSearch(e.target.value)}
+                            placeholder="Search assets…"
+                            className="h-8 text-sm"
+                        />
+                        {assetsLoading ? (
+                            <div className="flex items-center justify-center h-[200px] text-sm text-muted-foreground">
+                                Loading assets…
+                            </div>
+                        ) : filteredAssets.length === 0 ? (
+                            <div className="flex items-center justify-center h-[200px] text-sm text-muted-foreground">
+                                {assetsSearch ? "No matching images" : "No images in your media library"}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-3 gap-2 max-h-[280px] overflow-y-auto rounded-lg p-0.5">
+                                {filteredAssets.map((asset) => (
+                                    <button
+                                        key={asset.id}
+                                        type="button"
+                                        onClick={() => selectAsset(asset)}
+                                        className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all hover:opacity-90 ${selectedAsset?.id === asset.id
+                                                ? "border-primary ring-2 ring-primary/30"
+                                                : "border-transparent hover:border-border"
+                                            }`}
+                                    >
+                                        <Image
+                                            src={asset.url}
+                                            alt={asset.altText ?? asset.filename}
+                                            fill
+                                            className="object-cover"
+                                            unoptimized
+                                        />
+                                        {selectedAsset?.id === asset.id && (
+                                            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                                <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">✓</span>
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {selectedAsset && (
+                            <p className="text-xs text-muted-foreground truncate">
+                                Selected: {selectedAsset.filename}
+                            </p>
+                        )}
                     </div>
                 )}
 
@@ -220,7 +317,7 @@ export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) 
                     </Button>
                     <Button
                         onClick={handleInsert}
-                        disabled={!url.trim() || uploading}
+                        disabled={(!url.trim() && !selectedAsset) || uploading}
                     >
                         Insert Image
                     </Button>
