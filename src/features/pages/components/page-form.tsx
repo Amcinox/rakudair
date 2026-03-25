@@ -370,8 +370,8 @@ export function PageForm({ pageId, initialSlug, initialTitle }: PageFormProps) {
                                 <div className="puck-embed-sidebar-left">
                                     <Puck.Components />
                                 </div>
-                                {/* Center: preview */}
-                                <div className="puck-embed-canvas">
+                                {/* Center: preview — use blog theme so block colors are correct */}
+                                <div className="puck-embed-canvas blog">
                                     <Puck.Preview />
                                 </div>
                                 {/* Right: fields */}
