@@ -751,14 +751,14 @@ export default function NavigationPage() {
                             <div className="space-y-2">
                                 <Label>Parent Item</Label>
                                 <Select
-                                    value={form.parentId ?? ""}
-                                    onValueChange={(v) => setForm((f) => ({ ...f, parentId: v || null }))}
+                                    value={form.parentId ?? "__none__"}
+                                    onValueChange={(v) => setForm((f) => ({ ...f, parentId: v === "__none__" ? null : v }))}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="None (root level)" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">None (root level)</SelectItem>
+                                        <SelectItem value="__none__">None (root level)</SelectItem>
                                         {availableParents.map((parent) => (
                                             <SelectItem key={parent.id} value={parent.id}>
                                                 {"\u00a0\u00a0".repeat(parent.depth)}
