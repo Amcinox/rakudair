@@ -122,7 +122,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 {!collapsed && (
                     <Link href="/dashboard" className="flex items-center gap-2">
                         <Image
-                            src="/logo.jpg"
+                            src="/logo.png"
                             alt="Rakuda Air"
                             width={28}
                             height={28}
@@ -136,7 +136,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 {collapsed && (
                     <Link href="/dashboard" className="mx-auto">
                         <Image
-                            src="/logo.jpg"
+                            src="/logo.png"
                             alt="Rakuda Air"
                             width={28}
                             height={28}

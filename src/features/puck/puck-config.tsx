@@ -236,7 +236,7 @@ export const puckConfig: Config<Components> = {
                 ctaLink: "/blog",
                 secondaryCtaText: "私たちについて",
                 secondaryCtaLink: "/about",
-                heroImage: "/hero-desert.jpg",
+                heroImage: "",
                 heroImageAlt: "サハラ砂漠の美しい風景",
             },
             render: HeroBlock,
@@ -435,8 +435,8 @@ export const puckConfig: Config<Components> = {
                 description: { type: "textarea", label: "Description" },
             },
             defaultProps: {
-                logoUrl: "/logo.jpg",
-                logoAlt: "Rakudair Mascot",
+                logoUrl: "/logo.png",
+                logoAlt: "Rakudair",
                 title: "次の冒険を一緒に計画しませんか？",
                 description:
                     "ニュースレターに登録して、最新の旅行記、特別なガイド、そしてここでしか読めないコンテンツを受け取りましょう。",
@@ -521,7 +521,7 @@ export const puckConfig: Config<Components> = {
                 },
             },
             defaultProps: {
-                src: "/hero-desert.jpg",
+                src: "",
                 alt: "Image",
                 caption: "",
                 width: "max-w-5xl",

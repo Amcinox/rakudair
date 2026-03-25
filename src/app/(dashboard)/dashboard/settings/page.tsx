@@ -24,7 +24,7 @@ export default function SettingsPage() {
         siteTagline: "ラクダイル",
         siteDescription: "A Japanese travel & culture blog",
         siteUrl: "https://www.rakudair.com",
-        logoUrl: "/logo.jpg",
+        logoUrl: "/logo.png",
         contactEmail: "info@rakudair.com",
         socialTwitter: "",
         socialInstagram: "",
@@ -182,7 +182,7 @@ export default function SettingsPage() {
                             <ImagePicker
                                 value={form.logoUrl}
                                 onChange={(url) => setForm((f) => ({ ...f, logoUrl: url }))}
-                                placeholder="/logo.jpg"
+                                placeholder="/logo.png"
                             />
                         </div>
                     </div>

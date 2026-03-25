@@ -21,7 +21,7 @@ export const defaultLandingData: Data = {
                 ctaLink: "/blog",
                 secondaryCtaText: "私たちについて",
                 secondaryCtaLink: "/about",
-                heroImage: "/hero-desert.jpg",
+                heroImage: "",
                 heroImageAlt: "サハラ砂漠の美しい風景",
             },
         },
@@ -101,7 +101,7 @@ export const defaultLandingData: Data = {
             type: "CtaNewsletter",
             props: {
                 id: "cta-1",
-                logoUrl: "/logo.jpg",
+                logoUrl: "/logo.png",
                 logoAlt: "Rakudair マスコット",
                 title: "次の冒険を一緒に計画しませんか？",
                 description:

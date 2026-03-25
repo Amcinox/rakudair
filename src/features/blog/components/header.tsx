@@ -28,23 +28,16 @@ export function Header() {
         <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16 md:h-20">
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors">
+                    {/* Logo — image already contains the site name */}
+                    <Link href="/" className="flex items-center group">
+                        {/* make it bigger */}
+                        <div className="relative h-9 md:h-11 w-36 md:w-44 scale-120">
                             <Image
                                 src={logoUrl}
                                 alt={`${siteName} ${siteTagline}`}
                                 fill
-                                className="object-cover"
+                                className="object-contain object-left"
                             />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="font-serif text-xl md:text-2xl font-bold text-foreground tracking-tight">
-                                {siteName}
-                            </span>
-                            <span className="text-xs text-muted-foreground -mt-1">
-                                {siteTagline}
-                            </span>
                         </div>
                     </Link>
 

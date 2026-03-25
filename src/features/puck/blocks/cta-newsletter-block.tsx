@@ -18,13 +18,15 @@ export function CtaNewsletterBlock({
         <section className="py-20 md:py-32">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 {logoUrl && (
-                    <div className="relative w-24 h-24 mx-auto mb-8 rounded-full overflow-hidden border-4 border-primary/20">
-                        <Image
-                            src={logoUrl}
-                            alt={logoAlt || "Logo"}
-                            fill
-                            className="object-cover"
-                        />
+                    <div className="flex justify-center mb-8">
+                        <div className="relative h-14 w-52">
+                            <Image
+                                src={logoUrl}
+                                alt={logoAlt || "Logo"}
+                                fill
+                                className="object-contain"
+                            />
+                        </div>
                     </div>
                 )}
                 <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-6">

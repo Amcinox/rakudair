@@ -64,7 +64,7 @@ export async function getWebsiteConfig(): Promise<WebsiteConfig> {
         (settings.siteDescription as string) ||
         "砂漠の風に導かれ、未知なる冒険へ。世界中の美しい場所をお届けします。";
     const siteUrl = (settings.siteUrl as string) || "https://www.rakudair.com";
-    const logoUrl = (settings.logoUrl as string) || "/logo.jpg";
+    const logoUrl = (settings.logoUrl as string) || "/logo.png";
     const contactEmail = (settings.contactEmail as string) || "";
 
     return {

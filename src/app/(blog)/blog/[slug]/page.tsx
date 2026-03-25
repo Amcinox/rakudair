@@ -323,7 +323,7 @@ export default async function ArticlePage({ params }: Props) {
                                 <div className="flex items-center gap-3">
                                     <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20">
                                         <Image
-                                            src="/logo.jpg"
+                                            src="/logo.png"
                                             alt="Rakudair"
                                             fill
                                             className="object-cover"
@@ -361,7 +361,7 @@ export default async function ArticlePage({ params }: Props) {
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex gap-8">
                             {/* Social Share Sidebar */}
-                            <SocialShare title={article.title} />
+                            <SocialShare title={article.title} slug={article.slug} />
 
                             {/* Main Content */}
                             <article className="flex-1 min-w-0">
@@ -390,7 +390,7 @@ export default async function ArticlePage({ params }: Props) {
                                 <AuthorBox
                                     name="Rakudair"
                                     bio="世界中の砂漠を旅し、その美しさと文化を記録しています。カメラを片手に、次の冒険へ。"
-                                    avatar="/logo.jpg"
+                                    avatar="/logo.png"
                                 />
                             </article>
                         </div>

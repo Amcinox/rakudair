@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { apiFetch } from "@/features/shared/api";
 import { ImagePicker } from "@/components/dashboard/image-picker";
 import { Save, Globe, Eye } from "lucide-react";
+import { defaultLandingData } from "@/features/puck/default-landing-data";
 
 /* ------------------------------------------------------------------ */
 /*  Tiny child component that syncs Puck data up to the parent ref     */
@@ -48,30 +49,33 @@ function PuckDataSync({
 /* ------------------------------------------------------------------ */
 interface PageFormProps {
     pageId?: string;
+    initialSlug?: string;
+    initialTitle?: string;
 }
 
-export function PageForm({ pageId }: PageFormProps) {
+export function PageForm({ pageId, initialSlug, initialTitle }: PageFormProps) {
     const router = useRouter();
     const isEdit = !!pageId;
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(isEdit);
 
     // Form state
-    const [title, setTitle] = useState("");
-    const [slug, setSlug] = useState("");
-    const [slugTouched, setSlugTouched] = useState(false);
+    const [title, setTitle] = useState(initialTitle ?? "");
+    const [slug, setSlug] = useState(initialSlug ?? "");
+    const [slugTouched, setSlugTouched] = useState(!!initialSlug);
     const [status, setStatus] = useState<string>("draft");
     const [template, setTemplate] = useState<string>("default");
     const [showInNav, setShowInNav] = useState(false);
     const [navOrder, setNavOrder] = useState(0);
     const [locale, setLocale] = useState("ja");
 
-    // Puck data
+    // Puck data — pre-load landing data when creating the home page from scratch
     const puckDataRef = useRef<Data | null>(null);
-    const [initialPuckData, setInitialPuckData] = useState<Data>({
-        root: { props: {} },
-        content: [],
-    });
+    const [initialPuckData, setInitialPuckData] = useState<Data>(
+        initialSlug === "home"
+            ? defaultLandingData
+            : { root: { props: {} }, content: [] },
+    );
 
     // SEO state
     const [seoTitle, setSeoTitle] = useState("");
