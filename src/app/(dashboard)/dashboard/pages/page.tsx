@@ -164,7 +164,7 @@ export default function PagesPage() {
                                             <div className="flex justify-end gap-1">
                                                 {pg.slug && (
                                                     <Button variant="ghost" size="sm" asChild>
-                                                        <a href={`/${pg.slug}`} target="_blank" rel="noopener noreferrer" title="Preview">
+                                                        <a href={pg.slug === "home" ? "/" : `/${pg.slug}`} target="_blank" rel="noopener noreferrer" title="Preview">
                                                             <ExternalLink className="w-3.5 h-3.5" />
                                                         </a>
                                                     </Button>
@@ -179,6 +179,8 @@ export default function PagesPage() {
                                                     size="sm"
                                                     className="text-destructive hover:text-destructive/80"
                                                     onClick={() => handleDelete(pg.id)}
+                                                    disabled={pg.slug === "home"}
+                                                    title={pg.slug === "home" ? "ランディングページは削除できません" : undefined}
                                                 >
                                                     Delete
                                                 </Button>

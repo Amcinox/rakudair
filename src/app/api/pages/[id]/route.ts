@@ -67,6 +67,15 @@ export const DELETE = apiRoute(async (_request: NextRequest,
     const { id } = await params;
     await requireRole(["admin"]);
 
+    // Prevent deletion of the landing page
+    const page = await db.query.pages.findFirst({ where: eq(pages.id, id) });
+    if (page?.slug === "home") {
+        return NextResponse.json(
+            { error: "ランディングページは削除できません" },
+            { status: 403 },
+        );
+    }
+
     // Delete related SEO
     await db
         .delete(seoMetadata)
