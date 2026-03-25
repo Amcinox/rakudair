@@ -11,6 +11,7 @@ export type Page = {
     status: string;
     template: string;
     showInNav: boolean;
+    navOrder: number;
     locale: string;
     createdAt: string;
     updatedAt: string;

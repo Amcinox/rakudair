@@ -389,6 +389,155 @@
     scroll-behavior: smooth;
 }
 
+/* ================================================================= */
+/*  Puck Editor — Dashboard Theme Overrides                          */
+/* ================================================================= */
+
+/* Override Puck color palette to match dashboard purple/gold */
+.puck-dashboard-embed {
+    /* Azure → Purple (primary accent) */
+    --puck-color-azure-01: oklch(0.25 0.15 305);
+    --puck-color-azure-02: oklch(0.32 0.16 305);
+    --puck-color-azure-03: oklch(0.40 0.17 305);
+    --puck-color-azure-04: oklch(0.48 0.18 305);
+    --puck-color-azure-05: oklch(0.55 0.18 305);
+    --puck-color-azure-06: oklch(0.62 0.15 305);
+    --puck-color-azure-07: oklch(0.70 0.12 305);
+    --puck-color-azure-08: oklch(0.78 0.08 305);
+    --puck-color-azure-09: oklch(0.88 0.04 305);
+    --puck-color-azure-10: oklch(0.93 0.02 305);
+    --puck-color-azure-11: oklch(0.96 0.01 305);
+    --puck-color-azure-12: oklch(0.98 0.005 305);
+
+    /* Grey → slightly warm-purple tinted greys */
+    --puck-color-grey-01: oklch(0.15 0.02 280);
+    --puck-color-grey-02: oklch(0.22 0.02 280);
+    --puck-color-grey-03: oklch(0.30 0.02 280);
+    --puck-color-grey-04: oklch(0.40 0.015 280);
+    --puck-color-grey-05: oklch(0.50 0.01 280);
+    --puck-color-grey-06: oklch(0.60 0.01 280);
+    --puck-color-grey-07: oklch(0.70 0.008 280);
+    --puck-color-grey-08: oklch(0.80 0.006 280);
+    --puck-color-grey-09: oklch(0.88 0.005 280);
+    --puck-color-grey-10: oklch(0.92 0.005 280);
+    --puck-color-grey-11: oklch(0.95 0.004 280);
+    --puck-color-grey-12: oklch(0.97 0.003 280);
+
+    --puck-font-family: inherit;
+}
+
+/* Embed layout — 3-column arrangement */
+.puck-embed-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr 280px;
+    height: 75vh;
+    min-height: 500px;
+    background: oklch(0.97 0.003 280);
+}
+
+.puck-embed-sidebar-left {
+    overflow-y: auto;
+    border-right: 1px solid oklch(0.9 0.01 280);
+    background: oklch(1 0 0);
+    padding: 12px;
+}
+
+.puck-embed-canvas {
+    overflow: auto;
+    background: oklch(0.95 0.005 280);
+    padding: 16px;
+}
+
+.puck-embed-sidebar-right {
+    overflow-y: auto;
+    border-left: 1px solid oklch(0.9 0.01 280);
+    background: oklch(1 0 0);
+    padding: 12px;
+}
+
+/* Drawer items */
+.puck-dashboard-embed [class*="_DrawerItem_"] {
+    border-radius: 6px;
+    border: 1px solid oklch(0.9 0.01 280);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.puck-dashboard-embed [class*="_DrawerItem_"]:hover {
+    border-color: oklch(0.55 0.18 305 / 0.4);
+    box-shadow: 0 2px 8px oklch(0.55 0.18 305 / 0.08);
+}
+
+/* Component list headings */
+.puck-dashboard-embed [class*="_ComponentList-title_"] {
+    font-weight: 600;
+    color: oklch(0.45 0.16 305);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Field labels */
+.puck-dashboard-embed [class*="_Label_"] {
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: oklch(0.35 0.03 280);
+}
+
+/* Inputs inside Puck */
+.puck-dashboard-embed input,
+.puck-dashboard-embed select,
+.puck-dashboard-embed textarea {
+    border-radius: 6px;
+    border: 1px solid oklch(0.88 0.01 280);
+    font-size: 0.8125rem;
+    transition: border-color 0.15s;
+}
+
+.puck-dashboard-embed input:focus,
+.puck-dashboard-embed select:focus,
+.puck-dashboard-embed textarea:focus {
+    border-color: oklch(0.55 0.18 305);
+    outline: none;
+    box-shadow: 0 0 0 2px oklch(0.55 0.18 305 / 0.15);
+}
+
+/* Puck buttons — primary variant */
+.puck-dashboard-embed [class*="_Button--primary_"] {
+    background: linear-gradient(135deg, oklch(0.55 0.18 305), oklch(0.48 0.2 280)) !important;
+    color: oklch(1 0 0) !important;
+    border: none !important;
+    font-weight: 600;
+}
+
+.puck-dashboard-embed [class*="_Button--primary_"]:hover {
+    box-shadow: 0 4px 16px oklch(0.55 0.18 305 / 0.3);
+}
+
+/* Selected component outline */
+.puck-dashboard-embed [class*="_DraggableComponent--isSelected_"] {
+    outline-color: oklch(0.55 0.18 305) !important;
+}
+
+/* Action bar accents */
+.puck-dashboard-embed [class*="_ActionBar_"] {
+    background: oklch(1 0 0);
+    border: 1px solid oklch(0.9 0.01 280);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px oklch(0 0 0 / 0.08);
+}
+
+/* Breadcrumb styling */
+.puck-dashboard-embed [class*="_Breadcrumbs_"] {
+    font-size: 0.75rem;
+    color: oklch(0.5 0.01 280);
+}
+
+/* Array field add button */
+.puck-dashboard-embed [class*="_ArrayField-addButton_"] {
+    color: oklch(0.55 0.18 305);
+    font-weight: 500;
+}
+
 @layer base {
     * {
         @apply border-border outline-ring/50;

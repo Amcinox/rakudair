@@ -9,6 +9,7 @@ export interface NavItem {
     label: string;
     url: string;
     target: string;
+    children?: NavItem[];
 }
 
 export interface WebsiteConfig {

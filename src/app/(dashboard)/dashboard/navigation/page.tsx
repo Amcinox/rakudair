@@ -10,6 +10,7 @@ import {
     useSensors,
     type DragEndEvent,
     type DragStartEvent,
+    type DragMoveEvent,
     DragOverlay,
 } from "@dnd-kit/core";
 import {
@@ -53,6 +54,7 @@ import {
     Plus,
     ArrowRight,
     ArrowLeft,
+    CornerDownRight,
 } from "lucide-react";
 import { apiFetch } from "@/features/shared/api";
 
@@ -70,7 +72,6 @@ function buildTree(items: NavItem[]): TreeNode[] {
     for (const item of items) {
         map.set(item.id, { ...item, children: [], depth: 0 });
     }
-
     for (const item of items) {
         const node = map.get(item.id)!;
         if (item.parentId && map.has(item.parentId)) {
@@ -87,7 +88,6 @@ function buildTree(items: NavItem[]): TreeNode[] {
         for (const node of nodes) sortChildren(node.children);
     };
     sortChildren(roots);
-
     return roots;
 }
 
@@ -104,18 +104,25 @@ function getMaxChildDepth(flatList: TreeNode[], nodeId: string): number {
     let maxDepth = 0;
     let counting = false;
     const nodeDepth = flatList.find((n) => n.id === nodeId)?.depth ?? 0;
-
     for (const node of flatList) {
         if (node.id === nodeId) { counting = true; continue; }
         if (counting) {
-            if (node.depth > nodeDepth) {
-                maxDepth = Math.max(maxDepth, node.depth - nodeDepth);
-            } else {
-                break;
-            }
+            if (node.depth > nodeDepth) maxDepth = Math.max(maxDepth, node.depth - nodeDepth);
+            else break;
         }
     }
     return maxDepth;
+}
+
+function getDescendantIds(items: NavItem[], id: string): Set<string> {
+    const result = new Set<string>();
+    const collect = (pid: string) => {
+        for (const item of items) {
+            if (item.parentId === pid) { result.add(item.id); collect(item.id); }
+        }
+    };
+    collect(id);
+    return result;
 }
 
 // ---------- Sortable Item ----------
@@ -136,27 +143,27 @@ interface SortableNavItemProps {
     collapsed: Set<string>;
     onToggleCollapse: (id: string) => void;
     hasChildren: boolean;
+    isNestTarget: boolean;
 }
 
 function SortableNavItem({
     node, onEdit, onDelete, onToggleVisibility, onAddChild,
-    onIndent, onOutdent, collapsed, onToggleCollapse, hasChildren,
+    onIndent, onOutdent, collapsed, onToggleCollapse, hasChildren, isNestTarget,
 }: SortableNavItemProps) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
         useSortable({ id: node.id });
 
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-    };
-
+    const style = { transform: CSS.Transform.toString(transform), transition };
     const isCollapsed = collapsed.has(node.id);
 
     return (
         <div ref={setNodeRef} style={style} className={`group ${isDragging ? "opacity-40" : ""}`}>
             <div
-                className={`flex items-center gap-2 rounded-lg border bg-card p-2.5 transition-colors hover:bg-muted/50 ${node.depth === 0 ? "border-border" : node.depth === 1 ? "border-border/60" : "border-border/40"
-                    }`}
+                className={`flex items-center gap-2 rounded-lg border bg-card p-2.5 transition-all hover:bg-muted/50 ${
+                    isNestTarget
+                        ? "ring-2 ring-primary border-primary/40 bg-primary/5"
+                        : node.depth === 0 ? "border-border" : node.depth === 1 ? "border-border/60" : "border-border/40"
+                }`}
                 style={{ marginLeft: `${node.depth * 28}px` }}
             >
                 <button
@@ -180,6 +187,12 @@ function SortableNavItem({
                     <p className="text-sm font-medium truncate">{node.label}</p>
                     <p className="text-[11px] text-muted-foreground truncate">{node.url}</p>
                 </div>
+
+                {isNestTarget && (
+                    <span className="text-[10px] font-medium text-primary flex items-center gap-0.5 shrink-0">
+                        <CornerDownRight className="w-3 h-3" /> nest here
+                    </span>
+                )}
 
                 <Badge variant="secondary" className={`${positionColors[node.position] ?? ""} text-[10px] shrink-0`}>
                     {node.position}
@@ -224,7 +237,7 @@ function SortableNavItem({
 
 function DragOverlayItem({ node }: { node: TreeNode }) {
     return (
-        <div className="flex items-center gap-2 rounded-lg border bg-card p-2.5 shadow-lg border-primary/30">
+        <div className="flex items-center gap-2 rounded-lg border bg-card p-2.5 shadow-lg border-primary/30 opacity-95">
             <GripVertical className="w-4 h-4 text-muted-foreground" />
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{node.label}</p>
@@ -238,6 +251,24 @@ function DragOverlayItem({ node }: { node: TreeNode }) {
 }
 
 // ---------- Main Page ----------
+type FormState = {
+    label: string;
+    url: string;
+    target: string;
+    position: string;
+    isVisible: boolean;
+    parentId: string | null;
+};
+
+const DEFAULT_FORM: FormState = {
+    label: "",
+    url: "",
+    target: "_self",
+    position: "header",
+    isVisible: true,
+    parentId: null,
+};
+
 export default function NavigationPage() {
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<NavItem | null>(null);
@@ -245,15 +276,9 @@ export default function NavigationPage() {
     const [posFilter, setPosFilter] = useState("all");
     const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
     const [activeId, setActiveId] = useState<string | null>(null);
-    const [parentIdForNew, setParentIdForNew] = useState<string | null>(null);
+    const [nestTarget, setNestTarget] = useState<string | null>(null);
 
-    const [form, setForm] = useState({
-        label: "",
-        url: "",
-        target: "_self",
-        position: "header",
-        isVisible: true,
-    });
+    const [form, setForm] = useState<FormState>(DEFAULT_FORM);
 
     const { items, loading, create, update, remove, refetch } = useNavigation(
         posFilter !== "all" ? posFilter : undefined,
@@ -311,6 +336,19 @@ export default function NavigationPage() {
         return groups;
     }, [visibleList]);
 
+    // Items available as parent in the dialog
+    const availableParents = useMemo(() => {
+        const excludeIds = editing
+            ? new Set([editing.id, ...getDescendantIds(items, editing.id)])
+            : new Set<string>();
+
+        return flatList.filter((n) =>
+            n.position === form.position &&
+            !excludeIds.has(n.id) &&
+            n.depth < 2 // child would be at depth n.depth+1 ≤ 2
+        );
+    }, [flatList, form.position, editing, items]);
+
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -318,23 +356,27 @@ export default function NavigationPage() {
 
     function openCreate() {
         setEditing(null);
-        setParentIdForNew(null);
-        setForm({ label: "", url: "", target: "_self", position: "header", isVisible: true });
+        setForm(DEFAULT_FORM);
         setOpen(true);
     }
 
     function openCreateChild(parentId: string) {
         setEditing(null);
-        setParentIdForNew(parentId);
         const parent = items.find((i) => i.id === parentId);
-        setForm({ label: "", url: "", target: "_self", position: parent?.position ?? "header", isVisible: true });
+        setForm({ ...DEFAULT_FORM, position: parent?.position ?? "header", parentId });
         setOpen(true);
     }
 
     function openEdit(item: NavItem) {
         setEditing(item);
-        setParentIdForNew(null);
-        setForm({ label: item.label, url: item.url, target: item.target, position: item.position, isVisible: item.isVisible });
+        setForm({
+            label: item.label,
+            url: item.url,
+            target: item.target,
+            position: item.position,
+            isVisible: item.isVisible,
+            parentId: item.parentId,
+        });
         setOpen(true);
     }
 
@@ -349,7 +391,7 @@ export default function NavigationPage() {
                 await update(editing.id, form);
             } else {
                 const maxSort = items.reduce((m, i) => Math.max(m, i.sortOrder), -1);
-                await create({ ...form, parentId: parentIdForNew, sortOrder: maxSort + 1 });
+                await create({ ...form, sortOrder: maxSort + 1 });
             }
             setOpen(false);
         } catch {
@@ -364,20 +406,13 @@ export default function NavigationPage() {
         const toDelete = [id];
         const collectChildren = (pid: string) => {
             for (const item of items) {
-                if (item.parentId === pid) {
-                    toDelete.push(item.id);
-                    collectChildren(item.id);
-                }
+                if (item.parentId === pid) { toDelete.push(item.id); collectChildren(item.id); }
             }
         };
         collectChildren(id);
         try {
-            for (const deleteId of toDelete.reverse()) {
-                await remove(deleteId);
-            }
-        } catch {
-            // handled by hook
-        }
+            for (const deleteId of toDelete.reverse()) await remove(deleteId);
+        } catch { /* handled */ }
     }
 
     async function toggleVisibility(item: NavItem) {
@@ -410,7 +445,6 @@ export default function NavigationPage() {
         if (idx <= 0) return;
         const node = flatList[idx];
         if (node.depth >= 2) return;
-
         let prevSibling: TreeNode | null = null;
         for (let i = idx - 1; i >= 0; i--) {
             if (flatList[i].position !== node.position) break;
@@ -418,14 +452,12 @@ export default function NavigationPage() {
             if (flatList[i].depth < node.depth) break;
         }
         if (!prevSibling) return;
-
         const maxChild = getMaxChildDepth(flatList, id);
         if (node.depth + 1 + maxChild > 2) return;
 
         const newList = flatList.map((n) =>
             n.id === id ? { ...n, parentId: prevSibling!.id, depth: node.depth + 1 } : n,
         );
-
         let adjusting = false;
         const updatedList = newList.map((n, i) => {
             if (n.id === id) { adjusting = true; return n; }
@@ -436,7 +468,6 @@ export default function NavigationPage() {
             }
             return n;
         });
-
         await saveOrder(updatedList);
     }
 
@@ -451,7 +482,6 @@ export default function NavigationPage() {
         const newList = flatList.map((n) =>
             n.id === id ? { ...n, parentId: parent.parentId, depth: node.depth - 1 } : n,
         );
-
         let adjusting = false;
         const updatedList = newList.map((n, i) => {
             if (n.id === id) { adjusting = true; return n; }
@@ -462,16 +492,28 @@ export default function NavigationPage() {
             }
             return n;
         });
-
         await saveOrder(updatedList);
     }
 
     function handleDragStart(event: DragStartEvent) {
         setActiveId(event.active.id as string);
+        setNestTarget(null);
+    }
+
+    function handleDragMove(event: DragMoveEvent) {
+        const { active, over, delta } = event;
+        if (!over || active.id === over.id) { setNestTarget(null); return; }
+        const overNode = visibleList.find((n) => n.id === over.id as string);
+        if (!overNode || overNode.depth >= 2) { setNestTarget(null); return; }
+        // If dragged more than 40px to the right → show nest-as-child indicator
+        setNestTarget(delta.x > 40 ? over.id as string : null);
     }
 
     async function handleDragEnd(event: DragEndEvent) {
+        const currentNestTarget = nestTarget;
         setActiveId(null);
+        setNestTarget(null);
+
         const { active, over } = event;
         if (!over || active.id === over.id) return;
 
@@ -482,11 +524,9 @@ export default function NavigationPage() {
         const draggedNode = visibleList[oldIndex];
         const targetNode = visibleList[newIndex];
 
-        // Prevent cross-position drops
         if (draggedNode.position !== targetNode.position) return;
 
-        const draggedIds = new Set<string>();
-        draggedIds.add(draggedNode.id);
+        const draggedIds = new Set<string>([draggedNode.id]);
         const collectDesc = (pid: string) => {
             for (const item of flatList) {
                 if (item.parentId === pid) { draggedIds.add(item.id); collectDesc(item.id); }
@@ -497,6 +537,37 @@ export default function NavigationPage() {
         const remaining = flatList.filter((n) => !draggedIds.has(n.id));
         const dragged = flatList.filter((n) => draggedIds.has(n.id));
 
+        // --- NEST mode: dragged right → drop as child of target ---
+        if (currentNestTarget === over.id as string) {
+            const maxDescDepth = getMaxChildDepth(flatList, draggedNode.id);
+            if (targetNode.depth + 1 + maxDescDepth > 2) {
+                toast.error("Maximum 3 nesting levels allowed");
+                return;
+            }
+            // Insert after target's last descendant in remaining
+            let insertAfterIdx = remaining.findIndex((n) => n.id === targetNode.id);
+            while (
+                insertAfterIdx + 1 < remaining.length &&
+                remaining[insertAfterIdx + 1].depth > targetNode.depth
+            ) {
+                insertAfterIdx++;
+            }
+            const depthDiff = (targetNode.depth + 1) - draggedNode.depth;
+            const updatedDragged = dragged.map((n) =>
+                n.id === draggedNode.id
+                    ? { ...n, parentId: targetNode.id, depth: targetNode.depth + 1 }
+                    : { ...n, depth: n.depth + depthDiff },
+            );
+            const newList = [
+                ...remaining.slice(0, insertAfterIdx + 1),
+                ...updatedDragged,
+                ...remaining.slice(insertAfterIdx + 1),
+            ];
+            await saveOrder(newList);
+            return;
+        }
+
+        // --- REORDER mode (existing logic) ---
         const targetIdx = remaining.findIndex((n) => n.id === targetNode.id);
         if (targetIdx < 0) return;
 
@@ -521,7 +592,6 @@ export default function NavigationPage() {
             ...updatedDragged,
             ...remaining.slice(insertIdx),
         ];
-
         await saveOrder(newList);
     }
 
@@ -534,7 +604,7 @@ export default function NavigationPage() {
                 <div className="flex items-center justify-between">
                     <div>
                         <h2 className="text-2xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}>Navigation</h2>
-                        <p className="text-muted-foreground">Build your menu hierarchy — drag to reorder, indent to nest (3 levels max).</p>
+                        <p className="text-muted-foreground">Build your menu hierarchy — drag to reorder, drag right to nest (3 levels max).</p>
                     </div>
                     <Button onClick={openCreate} className="btn-gold">
                         <Plus className="w-4 h-4 mr-1.5" /> Add Item
@@ -564,7 +634,13 @@ export default function NavigationPage() {
                             <p className="text-sm">Set the path — add a link!</p>
                         </div>
                     ) : (
-                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragStart={handleDragStart}
+                            onDragMove={handleDragMove}
+                            onDragEnd={handleDragEnd}
+                        >
                             {["header", "footer", "social"].filter((pos) => positionGrouped[pos]?.length > 0).map((pos) => (
                                 <div key={pos}>
                                     {posFilter === "all" && (
@@ -588,6 +664,7 @@ export default function NavigationPage() {
                                                     collapsed={collapsed}
                                                     onToggleCollapse={toggleCollapse}
                                                     hasChildren={hasChildren(node.id)}
+                                                    isNestTarget={nestTarget === node.id}
                                                 />
                                             ))}
                                         </div>
@@ -603,37 +680,50 @@ export default function NavigationPage() {
                     <span className="flex items-center gap-1"><GripVertical className="w-3 h-3" /> Drag to reorder</span>
                     <span className="flex items-center gap-1"><ArrowRight className="w-3 h-3" /> Indent (nest)</span>
                     <span className="flex items-center gap-1"><ArrowLeft className="w-3 h-3" /> Outdent</span>
+                    <span className="flex items-center gap-1"><CornerDownRight className="w-3 h-3" /> Drag right to nest</span>
                     <span className="flex items-center gap-1"><Plus className="w-3 h-3" /> Add child</span>
                 </div>
 
+                {/* Create / Edit Dialog */}
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>
-                                {editing ? "Edit Navigation Item" : parentIdForNew ? "Add Child Item" : "Add Navigation Item"}
+                                {editing ? "Edit Navigation Item" : form.parentId ? "Add Child Item" : "Add Navigation Item"}
                             </DialogTitle>
                             <DialogDescription>
                                 {editing ? "Update this navigation item." : "Add a new item to the navigation menu."}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
-                            {parentIdForNew && !editing && (
+                            {form.parentId && !editing && (
                                 <p className="text-xs text-muted-foreground bg-muted rounded-md px-3 py-2">
-                                    Adding as child of: <strong>{items.find((i) => i.id === parentIdForNew)?.label ?? "Unknown"}</strong>
+                                    Adding as child of: <strong>{items.find((i) => i.id === form.parentId)?.label ?? "Unknown"}</strong>
                                 </p>
                             )}
                             <div className="space-y-2">
                                 <Label>Label</Label>
-                                <Input value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} placeholder="e.g. About Us" />
+                                <Input
+                                    value={form.label}
+                                    onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
+                                    placeholder="e.g. About Us"
+                                />
                             </div>
                             <div className="space-y-2">
                                 <Label>URL</Label>
-                                <Input value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} placeholder="/about or https://..." />
+                                <Input
+                                    value={form.url}
+                                    onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+                                    placeholder="/about or https://..."
+                                />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Position</Label>
-                                    <Select value={form.position} onValueChange={(v) => setForm((f) => ({ ...f, position: v }))}>
+                                    <Select
+                                        value={form.position}
+                                        onValueChange={(v) => setForm((f) => ({ ...f, position: v, parentId: null }))}
+                                    >
                                         <SelectTrigger><SelectValue /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="header">Header</SelectItem>
@@ -644,7 +734,10 @@ export default function NavigationPage() {
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Target</Label>
-                                    <Select value={form.target} onValueChange={(v) => setForm((f) => ({ ...f, target: v }))}>
+                                    <Select
+                                        value={form.target}
+                                        onValueChange={(v) => setForm((f) => ({ ...f, target: v }))}
+                                    >
                                         <SelectTrigger><SelectValue /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="_self">Same Tab</SelectItem>
@@ -653,13 +746,45 @@ export default function NavigationPage() {
                                     </Select>
                                 </div>
                             </div>
+
+                            {/* Parent selector */}
+                            <div className="space-y-2">
+                                <Label>Parent Item</Label>
+                                <Select
+                                    value={form.parentId ?? "__none__"}
+                                    onValueChange={(v) => setForm((f) => ({ ...f, parentId: v === "__none__" ? null : v }))}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="None (root level)" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="__none__">None (root level)</SelectItem>
+                                        {availableParents.map((parent) => (
+                                            <SelectItem key={parent.id} value={parent.id}>
+                                                {"\u00a0\u00a0".repeat(parent.depth)}
+                                                {parent.depth > 0 ? "└ " : ""}
+                                                {parent.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-[11px] text-muted-foreground">
+                                    Choose a parent to nest this item (max 3 levels).
+                                </p>
+                            </div>
+
                             <div className="flex items-center justify-between">
                                 <Label>Visible</Label>
-                                <Switch checked={form.isVisible} onCheckedChange={(v) => setForm((f) => ({ ...f, isVisible: v }))} />
+                                <Switch
+                                    checked={form.isVisible}
+                                    onCheckedChange={(v) => setForm((f) => ({ ...f, isVisible: v }))}
+                                />
                             </div>
                             <div className="flex justify-end gap-2 pt-2">
                                 <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                                <Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : editing ? "Update" : "Create"}</Button>
+                                <Button onClick={handleSave} disabled={saving}>
+                                    {saving ? "Saving…" : editing ? "Update" : "Create"}
+                                </Button>
                             </div>
                         </div>
                     </DialogContent>

@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { pages, seoMetadata } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import type { Metadata } from "next";
+import type { Data } from "@puckeditor/core";
+import { PuckRenderer } from "@/features/puck/puck-renderer";
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -88,6 +90,14 @@ export default async function StaticPage({ params }: Props) {
         isPreview = true;
     }
 
+    // Detect if page uses Puck data (has content.content array) vs legacy Tiptap HTML
+    const puckData = page.content as Data | null;
+    const isPuckPage =
+        puckData &&
+        typeof puckData === "object" &&
+        "content" in puckData &&
+        Array.isArray(puckData.content);
+
     return (
         <main className="min-h-screen pt-20">
             {isPreview && (
@@ -95,23 +105,27 @@ export default async function StaticPage({ params }: Props) {
                     プレビューモード — このページはまだ公開されていません (Status: {page.status})
                 </div>
             )}
-            <section className="py-12 md:py-16">
-                <div
-                    className={
-                        page.template === "full-width"
-                            ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-                            : "max-w-3xl mx-auto px-4 sm:px-6 lg:px-8"
-                    }
-                >
-                    <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-8">
-                        {page.title}
-                    </h1>
+            {isPuckPage ? (
+                <PuckRenderer data={puckData} />
+            ) : (
+                <section className="py-12 md:py-16">
                     <div
-                        className="prose prose-lg max-w-none prose-headings:font-serif prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl"
-                        dangerouslySetInnerHTML={{ __html: page.contentHtml ?? "" }}
-                    />
-                </div>
-            </section>
+                        className={
+                            page.template === "full-width"
+                                ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+                                : "max-w-3xl mx-auto px-4 sm:px-6 lg:px-8"
+                        }
+                    >
+                        <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-8">
+                            {page.title}
+                        </h1>
+                        <div
+                            className="prose prose-lg max-w-none prose-headings:font-serif prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl"
+                            dangerouslySetInnerHTML={{ __html: page.contentHtml ?? "" }}
+                        />
+                    </div>
+                </section>
+            )}
         </main>
     );
 }

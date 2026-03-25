@@ -106,24 +106,16 @@ export function Footer() {
         <footer className="bg-secondary border-t border-border">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-                    {/* Brand */}
+                    {/* Brand — logo image already contains the site name */}
                     <div className="lg:col-span-1">
-                        <Link href="/" className="flex items-center gap-3 mb-4">
-                            <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20">
+                        <Link href="/" className="block mb-4">
+                            <div className="relative h-10 w-40">
                                 <Image
                                     src={logoUrl}
                                     alt={`${siteName} ${siteTagline}`}
                                     fill
-                                    className="object-cover"
+                                    className="object-contain object-left"
                                 />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-serif text-xl font-bold text-foreground">
-                                    {siteName}
-                                </span>
-                                <span className="text-xs text-muted-foreground -mt-1">
-                                    {siteTagline}
-                                </span>
                             </div>
                         </Link>
                         <p className="text-muted-foreground text-sm leading-relaxed mb-6">

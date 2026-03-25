@@ -30,6 +30,7 @@ export async function getWebsiteConfig(): Promise<WebsiteConfig> {
                 target: navigation.target,
                 position: navigation.position,
                 sortOrder: navigation.sortOrder,
+                parentId: navigation.parentId,
             })
             .from(navigation)
             .where(eq(navigation.isVisible, true))
@@ -38,18 +39,34 @@ export async function getWebsiteConfig(): Promise<WebsiteConfig> {
         db.select().from(siteSettings),
     ]);
 
-    // Split navigation by position
+    // Build a flat id→NavItem map (all positions)
+    const itemMap = new Map<string, NavItem>();
+    for (const n of navItems) {
+        itemMap.set(n.id, { id: n.id, label: n.label, url: n.url, target: n.target });
+    }
+    // Wire up children
+    for (const n of navItems) {
+        if (n.parentId) {
+            const parent = itemMap.get(n.parentId);
+            if (parent) {
+                parent.children = parent.children ?? [];
+                parent.children.push(itemMap.get(n.id)!);
+            }
+        }
+    }
+
+    // Collect root items (no parent) per position
     const headerLinks: NavItem[] = navItems
-        .filter((n) => n.position === "header")
-        .map(({ id, label, url, target }) => ({ id, label, url, target }));
+        .filter((n) => n.position === "header" && !n.parentId)
+        .map((n) => itemMap.get(n.id)!);
 
     const footerLinks: NavItem[] = navItems
-        .filter((n) => n.position === "footer")
-        .map(({ id, label, url, target }) => ({ id, label, url, target }));
+        .filter((n) => n.position === "footer" && !n.parentId)
+        .map((n) => itemMap.get(n.id)!);
 
     const socialLinks: NavItem[] = navItems
-        .filter((n) => n.position === "social")
-        .map(({ id, label, url, target }) => ({ id, label, url, target }));
+        .filter((n) => n.position === "social" && !n.parentId)
+        .map((n) => itemMap.get(n.id)!);
 
     // Build settings map
     const settings: Record<string, unknown> = {};
@@ -64,7 +81,7 @@ export async function getWebsiteConfig(): Promise<WebsiteConfig> {
         (settings.siteDescription as string) ||
         "砂漠の風に導かれ、未知なる冒険へ。世界中の美しい場所をお届けします。";
     const siteUrl = (settings.siteUrl as string) || "https://www.rakudair.com";
-    const logoUrl = (settings.logoUrl as string) || "/logo.jpg";
+    const logoUrl = (settings.logoUrl as string) || "/logo.png";
     const contactEmail = (settings.contactEmail as string) || "";
 
     return {

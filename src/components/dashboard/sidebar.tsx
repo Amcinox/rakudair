@@ -120,27 +120,25 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             {/* Logo */}
             <div className="flex h-14 items-center border-b border-sidebar-border px-3">
                 {!collapsed && (
-                    <Link href="/dashboard" className="flex items-center gap-2">
-                        <Image
-                            src="/logo.jpg"
-                            alt="Rakuda Air"
-                            width={28}
-                            height={28}
-                            className="rounded-full ring-2 ring-primary/30"
-                        />
-                        <span className="gold-gradient-text font-bold text-sm tracking-wide uppercase" style={{ fontFamily: "var(--font-display)" }}>
-                            Rakuda Air
-                        </span>
+                    <Link href="/dashboard" className="flex items-center">
+                        <div className="relative h-8 w-32">
+                            <Image
+                                src="/logo.png"
+                                alt="Rakuda Air"
+                                fill
+                                className="object-contain object-left"
+                            />
+                        </div>
                     </Link>
                 )}
                 {collapsed && (
                     <Link href="/dashboard" className="mx-auto">
                         <Image
-                            src="/logo.jpg"
+                            src="/logo.png"
                             alt="Rakuda Air"
                             width={28}
                             height={28}
-                            className="rounded-full ring-2 ring-primary/30"
+                            className="object-contain"
                         />
                     </Link>
                 )}
