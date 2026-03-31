@@ -3,7 +3,7 @@ import Image from "next/image";
 interface ImageBlockProps {
     src: string;
     alt: string;
-    caption: string;
+    caption?: string;
     width: string;
     rounded: boolean;
 }

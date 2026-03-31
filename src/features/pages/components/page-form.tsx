@@ -6,6 +6,7 @@ import slugify from "slugify";
 import { Puck, usePuck, type Data } from "@puckeditor/core";
 import "@puckeditor/core/puck.css";
 import { puckConfig } from "@/features/puck/puck-config";
+import { defaultLandingData } from "@/features/puck/default-landing-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +30,6 @@ import { toast } from "sonner";
 import { apiFetch } from "@/features/shared/api";
 import { ImagePicker } from "@/components/dashboard/image-picker";
 import { Save, Globe, Eye } from "lucide-react";
-import { defaultLandingData } from "@/features/puck/default-landing-data";
 
 /* ------------------------------------------------------------------ */
 /*  Tiny child component that syncs Puck data up to the parent ref     */
@@ -69,12 +69,10 @@ export function PageForm({ pageId, initialSlug, initialTitle }: PageFormProps) {
     const [navOrder, setNavOrder] = useState(0);
     const [locale, setLocale] = useState("ja");
 
-    // Puck data — pre-load landing data when creating the home page from scratch
+    // Puck data — pre-load default landing layout when creating the home page
     const puckDataRef = useRef<Data | null>(null);
     const [initialPuckData, setInitialPuckData] = useState<Data>(
-        initialSlug === "home"
-            ? defaultLandingData
-            : { root: { props: {} }, content: [] },
+        initialSlug === "home" ? (defaultLandingData as Data) : { root: { props: {} }, content: [] },
     );
 
     // SEO state
@@ -370,8 +368,8 @@ export function PageForm({ pageId, initialSlug, initialTitle }: PageFormProps) {
                                 <div className="puck-embed-sidebar-left">
                                     <Puck.Components />
                                 </div>
-                                {/* Center: preview — use blog theme so block colors are correct */}
-                                <div className="puck-embed-canvas blog">
+                                {/* Center: preview */}
+                                <div className="puck-embed-canvas">
                                     <Puck.Preview />
                                 </div>
                                 {/* Right: fields */}

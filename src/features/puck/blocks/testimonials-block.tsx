@@ -9,7 +9,7 @@ interface TestimonialsBlockProps {
         role: string;
         content: string;
         rating: number;
-        avatar: string;
+        avatar?: string;
     }[];
 }
 
