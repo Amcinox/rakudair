@@ -4,6 +4,8 @@ import { pages, articles, categories } from "@/lib/db/schema";
 import { apiRoute } from "@/lib/api-utils";
 import { eq, asc, desc } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export const GET = apiRoute(async () => {
     const [pageList, articleList, categoryList] = await Promise.all([
         db
