@@ -47,9 +47,9 @@ export function FeaturedPostsBlock({
                         <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
                             {heading}
                         </h2>
-                        <p className="text-muted-foreground max-w-xl mx-auto">
-                            {description}
-                        </p>
+                        <p className="text-muted-foreground max-w-xl mx-auto"
+                            dangerouslySetInnerHTML={{ __html: description ?? "" }}
+                        />
                         <p className="text-muted-foreground/60 mt-8 text-sm">
                             まだ記事がありません。記事を作成して公開してください。
                         </p>
@@ -67,7 +67,7 @@ export function FeaturedPostsBlock({
                         <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
                             {heading}
                         </h2>
-                        <p className="text-muted-foreground max-w-xl">{description}</p>
+                        <p className="text-muted-foreground max-w-xl" dangerouslySetInnerHTML={{ __html: description ?? "" }} />
                     </div>
                     {linkText && (
                         <Link

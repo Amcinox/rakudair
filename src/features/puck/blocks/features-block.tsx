@@ -50,9 +50,9 @@ export function FeaturesBlock({ heading, description, items }: FeaturesBlockProp
                     <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
                         {heading}
                     </h2>
-                    <p className="text-muted-foreground max-w-2xl mx-auto">
-                        {description}
-                    </p>
+                    <p className="text-muted-foreground max-w-2xl mx-auto"
+                        dangerouslySetInnerHTML={{ __html: description ?? "" }}
+                    />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -69,9 +69,9 @@ export function FeaturesBlock({ heading, description, items }: FeaturesBlockProp
                                 <h3 className="font-serif text-xl font-bold text-foreground mb-3">
                                     {feature.title}
                                 </h3>
-                                <p className="text-muted-foreground leading-relaxed">
-                                    {feature.description}
-                                </p>
+                                <p className="text-muted-foreground leading-relaxed"
+                                    dangerouslySetInnerHTML={{ __html: feature.description ?? "" }}
+                                />
                             </div>
                         );
                     })}

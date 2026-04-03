@@ -9,6 +9,18 @@ import { CtaNewsletterBlock } from "./blocks/cta-newsletter-block";
 import { RichTextBlock } from "./blocks/rich-text-block";
 import { SpacerBlock } from "./blocks/spacer-block";
 import { ImageBlock } from "./blocks/image-block";
+import { RichTextField } from "./fields/rich-text-field";
+
+// ── Helper to build a custom rich-text field ──────────────────────────────────
+function richTextField(label: string) {
+    return {
+        type: "custom" as const,
+        label,
+        render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+            <RichTextField value={value ?? ""} onChange={onChange} />
+        ),
+    };
+}
 
 // ---- Component prop types ----
 
@@ -19,6 +31,7 @@ export type Components = {
         titleHighlight: string;
         titleSuffix: string;
         description: string;
+        buttons: { text: string; link: string; variant: "default" | "outline" | "secondary" | "ghost"; icon: "none" | "arrow" | "external" | "play" | "download" | "mail" | "info" | "star" | "check" }[];
         ctaText: string;
         ctaLink: string;
         secondaryCtaText: string;
@@ -84,7 +97,46 @@ export const puckConfig: Config<Components> = {
                 title: { type: "text", label: "Title (before highlight)" },
                 titleHighlight: { type: "text", label: "Title Highlight" },
                 titleSuffix: { type: "text", label: "Title Suffix" },
-                description: { type: "textarea", label: "Description" },
+                description: richTextField("Description"),
+                buttons: {
+                    type: "array",
+                    label: "Buttons",
+                    arrayFields: {
+                        text: { type: "text", label: "Label" },
+                        link: { type: "text", label: "URL" },
+                        variant: {
+                            type: "select",
+                            label: "Style",
+                            options: [
+                                { label: "Primary", value: "default" },
+                                { label: "Outline", value: "outline" },
+                                { label: "Secondary", value: "secondary" },
+                                { label: "Ghost", value: "ghost" },
+                            ],
+                        },
+                        icon: {
+                            type: "select",
+                            label: "Icon",
+                            options: [
+                                { label: "None", value: "none" },
+                                { label: "Arrow", value: "arrow" },
+                                { label: "External", value: "external" },
+                                { label: "Play", value: "play" },
+                                { label: "Download", value: "download" },
+                                { label: "Mail", value: "mail" },
+                                { label: "Info", value: "info" },
+                                { label: "Star", value: "star" },
+                                { label: "Check", value: "check" },
+                            ],
+                        },
+                    },
+                    defaultItemProps: {
+                        text: "Get Started",
+                        link: "/blog",
+                        variant: "default",
+                        icon: "arrow",
+                    },
+                },
                 ctaText: { type: "text", label: "CTA Button Text" },
                 ctaLink: { type: "text", label: "CTA Link" },
                 secondaryCtaText: { type: "text", label: "Secondary CTA Text" },
@@ -99,6 +151,10 @@ export const puckConfig: Config<Components> = {
                 titleSuffix: "へ",
                 description:
                     "ラクダイルは、世界中の砂漠、オアシス、そして冒険の旅をお届けする日本語トラベルブログです。あなたの次の旅を、特別なものに。",
+                buttons: [
+                    { text: "冒険を始める", link: "/blog", variant: "default", icon: "arrow" },
+                    { text: "私たちについて", link: "/about", variant: "outline", icon: "none" },
+                ],
                 ctaText: "冒険を始める",
                 ctaLink: "/blog",
                 secondaryCtaText: "私たちについて",
@@ -112,7 +168,7 @@ export const puckConfig: Config<Components> = {
             label: "Features Section",
             fields: {
                 heading: { type: "text", label: "Heading" },
-                description: { type: "textarea", label: "Description" },
+                description: richTextField("Description"),
                 items: {
                     type: "array",
                     label: "Feature Items",
@@ -132,12 +188,12 @@ export const puckConfig: Config<Components> = {
                             ],
                         },
                         title: { type: "text", label: "Title" },
-                        description: { type: "textarea", label: "Description" },
+                        description: richTextField("Description"),
                     },
                     defaultItemProps: {
                         icon: "map-pin",
                         title: "New Feature",
-                        description: "Enter a description here.",
+                        description: "<p>Enter a description here.</p>",
                     },
                 },
             },
@@ -171,7 +227,7 @@ export const puckConfig: Config<Components> = {
             label: "Featured Posts",
             fields: {
                 heading: { type: "text", label: "Heading" },
-                description: { type: "textarea", label: "Description" },
+                description: richTextField("Description"),
                 linkText: { type: "text", label: "Link Text" },
                 linkUrl: { type: "text", label: "Link URL" },
                 count: { type: "number", label: "Post Count", min: 1, max: 12 },
@@ -189,20 +245,20 @@ export const puckConfig: Config<Components> = {
             label: "Testimonials",
             fields: {
                 heading: { type: "text", label: "Heading" },
-                description: { type: "textarea", label: "Description" },
+                description: richTextField("Description"),
                 items: {
                     type: "array",
                     label: "Testimonials",
                     arrayFields: {
                         name: { type: "text", label: "Name" },
                         role: { type: "text", label: "Role" },
-                        content: { type: "textarea", label: "Content" },
+                        content: richTextField("Content"),
                         rating: { type: "number", label: "Rating (1-5)", min: 1, max: 5 },
                     },
                     defaultItemProps: {
                         name: "Name",
                         role: "Role",
-                        content: "Enter testimonial content here.",
+                        content: "<p>Enter testimonial content here.</p>",
                         rating: 5,
                     },
                 },
@@ -242,7 +298,7 @@ export const puckConfig: Config<Components> = {
                 logoUrl: { type: "text", label: "Logo URL" },
                 logoAlt: { type: "text", label: "Logo Alt" },
                 title: { type: "text", label: "Title" },
-                description: { type: "textarea", label: "Description" },
+                description: richTextField("Description"),
             },
             defaultProps: {
                 logoUrl: "/logo.jpg",
@@ -256,7 +312,7 @@ export const puckConfig: Config<Components> = {
         RichText: {
             label: "Rich Text",
             fields: {
-                html: { type: "textarea", label: "HTML Content" },
+                html: richTextField("HTML Content"),
             },
             defaultProps: {
                 html: "<p>Enter your text here.</p>",
