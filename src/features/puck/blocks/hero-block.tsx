@@ -1,7 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ExternalLink, Play, Download, Mail, Info, Star, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+interface HeroButton {
+    text: string;
+    link: string;
+    variant: "default" | "outline" | "secondary" | "ghost";
+    icon: "none" | "arrow" | "external" | "play" | "download" | "mail" | "info" | "star" | "check";
+}
 
 interface HeroBlockProps {
     badgeText: string;
@@ -9,13 +16,22 @@ interface HeroBlockProps {
     titleHighlight: string;
     titleSuffix: string;
     description: string;
-    ctaText: string;
-    ctaLink: string;
-    secondaryCtaText: string;
-    secondaryCtaLink: string;
+    buttons: HeroButton[];
     heroImage: string;
     heroImageAlt: string;
 }
+
+const iconComponents = {
+    none: null,
+    arrow: ArrowRight,
+    external: ExternalLink,
+    play: Play,
+    download: Download,
+    mail: Mail,
+    info: Info,
+    star: Star,
+    check: Check,
+};
 
 export function HeroBlock({
     badgeText,
@@ -23,13 +39,12 @@ export function HeroBlock({
     titleHighlight,
     titleSuffix,
     description,
-    ctaText,
-    ctaLink,
-    secondaryCtaText,
-    secondaryCtaLink,
+    buttons,
     heroImage,
     heroImageAlt,
 }: HeroBlockProps) {
+    const renderButtons = buttons && buttons.length > 0 ? buttons : [];
+
     return (
         <section className="relative min-h-screen flex items-center justify-center pt-20">
             <div className="absolute inset-0 z-0">
@@ -62,43 +77,29 @@ export function HeroBlock({
                     {titleSuffix}
                 </h1>
 
-                <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-                    {description}
-                </p>
+                <div
+                    className="prose prose-lg dark:prose-invert prose-p:text-muted-foreground prose-strong:text-foreground max-w-2xl mx-auto mb-10 text-center [&>*]:mx-auto"
+                    dangerouslySetInnerHTML={{ __html: description ?? "" }}
+                />
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    {ctaText && (
-                        <Button
-                            size="lg"
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8"
-                            asChild
-                        >
-                            <Link href={ctaLink || "#"}>
-                                {ctaText}
-                                <ArrowRight className="ml-2 h-5 w-5" />
-                            </Link>
-                        </Button>
-                    )}
-                    {secondaryCtaText && (
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            className="border-foreground/20"
-                            asChild
-                        >
-                            <Link href={secondaryCtaLink || "#"}>
-                                {secondaryCtaText}
-                            </Link>
-                        </Button>
-                    )}
-                </div>
-            </div>
-
-            {/* Scroll Indicator */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-muted-foreground">
-                <span className="text-sm">スクロール</span>
-                <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/50 flex justify-center pt-2">
-                    <div className="w-1.5 h-3 rounded-full bg-muted-foreground animate-bounce" />
+                    {renderButtons.map((btn, i) => {
+                        const Icon = iconComponents[btn.icon as keyof typeof iconComponents];
+                        return (
+                            <Button
+                                key={i}
+                                size="lg"
+                                variant={btn.variant || "default"}
+                                className={btn.variant === "default" && !btn.icon ? "bg-primary hover:bg-primary/90 text-primary-foreground px-8" : btn.variant === "outline" ? "border-foreground/20" : ""}
+                                asChild
+                            >
+                                <Link href={btn.link || "#"}>
+                                    {btn.text}
+                                    {Icon && <Icon className="ml-2 h-5 w-5" />}
+                                </Link>
+                            </Button>
+                        );
+                    })}
                 </div>
             </div>
         </section>

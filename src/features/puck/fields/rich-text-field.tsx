@@ -8,6 +8,11 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -18,32 +23,187 @@ import Highlight from "@tiptap/extension-highlight";
 import TiptapLink from "@tiptap/extension-link";
 import TiptapImage from "@tiptap/extension-image";
 import { Separator } from "@/components/ui/separator";
-import { Pencil } from "lucide-react";
+import { LinkPicker } from "@/components/dashboard/link-picker";
+import { ImagePicker } from "@/components/dashboard/image-picker";
+import {
+    Bold,
+    Italic,
+    Underline as UnderlineIcon,
+    Strikethrough,
+    Highlighter,
+    Heading2,
+    Heading3,
+    List,
+    ListOrdered,
+    Quote,
+    Code,
+    AlignLeft,
+    AlignCenter,
+    AlignRight,
+    Minus,
+    Undo2,
+    Redo2,
+    Link2,
+    ImageIcon,
+    Pencil,
+    Link2Off,
+} from "lucide-react";
 
-function MiniToolbarButton({
+// ── Toolbar button ────────────────────────────────────────────────────────────
+
+function ToolbarBtn({
     isActive,
     onClick,
-    children,
     title,
+    children,
+    disabled,
 }: {
     isActive?: boolean;
     onClick: () => void;
+    title: string;
     children: React.ReactNode;
-    title?: string;
+    disabled?: boolean;
 }) {
     return (
         <button
             type="button"
             onClick={onClick}
             title={title}
-            className={`rounded p-1 text-xs hover:bg-muted transition-colors ${
-                isActive ? "bg-accent text-accent-foreground" : ""
-            }`}
+            disabled={disabled}
+            className={`rounded p-1.5 transition-colors hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed ${isActive ? "bg-accent text-accent-foreground" : "text-foreground/70"
+                }`}
         >
             {children}
         </button>
     );
 }
+
+// ── Link picker popover ────────────────────────────────────────────────────────
+
+function LinkPickerPopover({ editor }: { editor: ReturnType<typeof useEditor> }) {
+    const [open, setOpen] = useState(false);
+    const [url, setUrl] = useState("");
+    const isActive = editor?.isActive("link") ?? false;
+
+    // Pre-fill URL from existing link when opening
+    const handleOpenChange = useCallback(
+        (next: boolean) => {
+            if (next && editor) {
+                const attrs = editor.getAttributes("link");
+                setUrl(attrs.href ?? "");
+            }
+            setOpen(next);
+        },
+        [editor],
+    );
+
+    const applyLink = useCallback(
+        (href: string) => {
+            if (!editor) return;
+            if (!href.trim()) {
+                editor.chain().focus().extendMarkRange("link").unsetLink().run();
+            } else {
+                editor
+                    .chain()
+                    .focus()
+                    .extendMarkRange("link")
+                    .setLink({ href: href.trim(), target: "_blank", rel: "noopener noreferrer" })
+                    .run();
+            }
+            setOpen(false);
+        },
+        [editor],
+    );
+
+    const removeLink = useCallback(() => {
+        editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+        setOpen(false);
+    }, [editor]);
+
+    return (
+        <Popover open={open} onOpenChange={handleOpenChange}>
+            <PopoverTrigger asChild>
+                <button
+                    type="button"
+                    title="Insert / edit link"
+                    className={`rounded p-1.5 transition-colors hover:bg-muted ${isActive ? "bg-accent text-accent-foreground" : "text-foreground/70"
+                        }`}
+                >
+                    <Link2 className="w-3.5 h-3.5" />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-3 space-y-3" align="start">
+                <p className="text-xs font-medium text-muted-foreground">Insert / edit link</p>
+                <LinkPicker
+                    value={url}
+                    onChange={(val) => setUrl(val)}
+                />
+                <div className="flex gap-2 pt-1">
+                    <Button size="sm" className="flex-1" onClick={() => applyLink(url)}>
+                        Apply
+                    </Button>
+                    {isActive && (
+                        <Button size="sm" variant="outline" onClick={removeLink}>
+                            <Link2Off className="w-3.5 h-3.5" />
+                        </Button>
+                    )}
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+}
+
+// ── Image picker dialog ────────────────────────────────────────────────────────
+
+function ImagePickerDialog({ editor }: { editor: ReturnType<typeof useEditor> }) {
+    const [open, setOpen] = useState(false);
+    const [imageUrl, setImageUrl] = useState("");
+
+    const handleInsert = useCallback(() => {
+        if (!editor || !imageUrl.trim()) return;
+        editor.chain().focus().setImage({ src: imageUrl.trim() }).run();
+        setImageUrl("");
+        setOpen(false);
+    }, [editor, imageUrl]);
+
+    return (
+        <>
+            <button
+                type="button"
+                title="Insert image"
+                onClick={() => setOpen(true)}
+                className="rounded p-1.5 transition-colors hover:bg-muted text-foreground/70"
+            >
+                <ImageIcon className="w-3.5 h-3.5" />
+            </button>
+
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Insert Image</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-2">
+                        <ImagePicker
+                            value={imageUrl}
+                            onChange={(url) => setImageUrl(url)}
+                            placeholder="Select or upload an image"
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleInsert} disabled={!imageUrl.trim()}>
+                            Insert
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
+    );
+}
+
+// ── Editor ────────────────────────────────────────────────────────────────────
 
 function RichTextEditor({
     initialHtml,
@@ -59,7 +219,7 @@ function RichTextEditor({
         immediatelyRender: false,
         extensions: [
             StarterKit.configure({ heading: { levels: [2, 3, 4] } }),
-            Placeholder.configure({ placeholder: "Start writing..." }),
+            Placeholder.configure({ placeholder: "Start writing…" }),
             TextAlign.configure({ types: ["heading", "paragraph"] }),
             Underline,
             Highlight.configure({ multicolor: true }),
@@ -86,155 +246,152 @@ function RichTextEditor({
 
     return (
         <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-0.5 border rounded-lg px-2 py-1.5 bg-muted/30">
-                <MiniToolbarButton
+            {/* Toolbar */}
+            <div className="flex flex-wrap items-center gap-0.5 border rounded-lg px-2 py-1 bg-muted/30">
+                {/* Text formatting */}
+                <ToolbarBtn
                     isActive={editor.isActive("bold")}
                     onClick={() => editor.chain().focus().toggleBold().run()}
                     title="Bold"
                 >
-                    <span className="font-bold">B</span>
-                </MiniToolbarButton>
-                <MiniToolbarButton
+                    <Bold className="w-3.5 h-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn
                     isActive={editor.isActive("italic")}
                     onClick={() => editor.chain().focus().toggleItalic().run()}
                     title="Italic"
                 >
-                    <span className="italic">I</span>
-                </MiniToolbarButton>
-                <MiniToolbarButton
+                    <Italic className="w-3.5 h-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn
                     isActive={editor.isActive("underline")}
                     onClick={() => editor.chain().focus().toggleUnderline().run()}
                     title="Underline"
                 >
-                    <span className="underline">U</span>
-                </MiniToolbarButton>
-                <MiniToolbarButton
+                    <UnderlineIcon className="w-3.5 h-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn
                     isActive={editor.isActive("strike")}
                     onClick={() => editor.chain().focus().toggleStrike().run()}
                     title="Strikethrough"
                 >
-                    <span className="line-through">S</span>
-                </MiniToolbarButton>
-                <MiniToolbarButton
+                    <Strikethrough className="w-3.5 h-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn
                     isActive={editor.isActive("highlight")}
                     onClick={() => editor.chain().focus().toggleHighlight().run()}
                     title="Highlight"
                 >
-                    <span className="bg-yellow-200 px-0.5">H</span>
-                </MiniToolbarButton>
+                    <Highlighter className="w-3.5 h-3.5" />
+                </ToolbarBtn>
 
                 <Separator orientation="vertical" className="mx-0.5 h-5" />
 
-                <MiniToolbarButton
+                {/* Headings */}
+                <ToolbarBtn
                     isActive={editor.isActive("heading", { level: 2 })}
-                    onClick={() =>
-                        editor.chain().focus().toggleHeading({ level: 2 }).run()
-                    }
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                     title="Heading 2"
                 >
-                    H2
-                </MiniToolbarButton>
-                <MiniToolbarButton
+                    <Heading2 className="w-3.5 h-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn
                     isActive={editor.isActive("heading", { level: 3 })}
-                    onClick={() =>
-                        editor.chain().focus().toggleHeading({ level: 3 }).run()
-                    }
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
                     title="Heading 3"
                 >
-                    H3
-                </MiniToolbarButton>
+                    <Heading3 className="w-3.5 h-3.5" />
+                </ToolbarBtn>
 
                 <Separator orientation="vertical" className="mx-0.5 h-5" />
 
-                <MiniToolbarButton
+                {/* Lists */}
+                <ToolbarBtn
                     isActive={editor.isActive("bulletList")}
                     onClick={() => editor.chain().focus().toggleBulletList().run()}
                     title="Bullet List"
                 >
-                    • List
-                </MiniToolbarButton>
-                <MiniToolbarButton
+                    <List className="w-3.5 h-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn
                     isActive={editor.isActive("orderedList")}
-                    onClick={() =>
-                        editor.chain().focus().toggleOrderedList().run()
-                    }
+                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
                     title="Ordered List"
                 >
-                    1. List
-                </MiniToolbarButton>
-                <MiniToolbarButton
+                    <ListOrdered className="w-3.5 h-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn
                     isActive={editor.isActive("blockquote")}
-                    onClick={() =>
-                        editor.chain().focus().toggleBlockquote().run()
-                    }
+                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
                     title="Blockquote"
                 >
-                    &ldquo;&rdquo;
-                </MiniToolbarButton>
-                <MiniToolbarButton
+                    <Quote className="w-3.5 h-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn
                     isActive={editor.isActive("codeBlock")}
-                    onClick={() =>
-                        editor.chain().focus().toggleCodeBlock().run()
-                    }
+                    onClick={() => editor.chain().focus().toggleCodeBlock().run()}
                     title="Code Block"
                 >
-                    {"</>"}
-                </MiniToolbarButton>
+                    <Code className="w-3.5 h-3.5" />
+                </ToolbarBtn>
 
                 <Separator orientation="vertical" className="mx-0.5 h-5" />
 
-                <MiniToolbarButton
+                {/* Alignment */}
+                <ToolbarBtn
                     isActive={editor.isActive({ textAlign: "left" })}
-                    onClick={() =>
-                        editor.chain().focus().setTextAlign("left").run()
-                    }
+                    onClick={() => editor.chain().focus().setTextAlign("left").run()}
                     title="Align Left"
                 >
-                    ≡L
-                </MiniToolbarButton>
-                <MiniToolbarButton
+                    <AlignLeft className="w-3.5 h-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn
                     isActive={editor.isActive({ textAlign: "center" })}
-                    onClick={() =>
-                        editor.chain().focus().setTextAlign("center").run()
-                    }
+                    onClick={() => editor.chain().focus().setTextAlign("center").run()}
                     title="Align Center"
                 >
-                    ≡C
-                </MiniToolbarButton>
-                <MiniToolbarButton
+                    <AlignCenter className="w-3.5 h-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn
                     isActive={editor.isActive({ textAlign: "right" })}
-                    onClick={() =>
-                        editor.chain().focus().setTextAlign("right").run()
-                    }
+                    onClick={() => editor.chain().focus().setTextAlign("right").run()}
                     title="Align Right"
                 >
-                    ≡R
-                </MiniToolbarButton>
+                    <AlignRight className="w-3.5 h-3.5" />
+                </ToolbarBtn>
 
                 <Separator orientation="vertical" className="mx-0.5 h-5" />
 
-                <MiniToolbarButton
-                    onClick={() =>
-                        editor.chain().focus().setHorizontalRule().run()
-                    }
+                {/* Link & Image */}
+                <LinkPickerPopover editor={editor} />
+                <ImagePickerDialog editor={editor} />
+
+                <Separator orientation="vertical" className="mx-0.5 h-5" />
+
+                {/* Misc */}
+                <ToolbarBtn
+                    onClick={() => editor.chain().focus().setHorizontalRule().run()}
                     title="Horizontal Rule"
                 >
-                    ―
-                </MiniToolbarButton>
-                <MiniToolbarButton
+                    <Minus className="w-3.5 h-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn
                     onClick={() => editor.chain().focus().undo().run()}
+                    disabled={!editor.can().undo()}
                     title="Undo"
                 >
-                    ↩
-                </MiniToolbarButton>
-                <MiniToolbarButton
+                    <Undo2 className="w-3.5 h-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn
                     onClick={() => editor.chain().focus().redo().run()}
+                    disabled={!editor.can().redo()}
                     title="Redo"
                 >
-                    ↪
-                </MiniToolbarButton>
+                    <Redo2 className="w-3.5 h-3.5" />
+                </ToolbarBtn>
             </div>
 
+            {/* Editor area */}
             <div className="rounded-lg border bg-card max-h-[50vh] overflow-y-auto">
                 <EditorContent editor={editor} />
             </div>
@@ -248,6 +405,8 @@ function RichTextEditor({
         </div>
     );
 }
+
+// ── Public field component ─────────────────────────────────────────────────────
 
 interface RichTextFieldProps {
     value: string;

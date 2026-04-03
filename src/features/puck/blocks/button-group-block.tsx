@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink, Play, Download, Mail, Info, Star, Check } from "lucide-react";
 
 interface ButtonItem {
     text: string;
     link: string;
     variant: "default" | "outline" | "secondary" | "ghost" | "destructive";
     size: "sm" | "default" | "lg";
-    icon: "none" | "arrow" | "external";
+    icon: "none" | "arrow" | "external" | "play" | "download" | "mail" | "info" | "star" | "check";
 }
 
 interface ButtonGroupBlockProps {
@@ -19,6 +19,12 @@ const iconComponents = {
     none: null,
     arrow: ArrowRight,
     external: ExternalLink,
+    play: Play,
+    download: Download,
+    mail: Mail,
+    info: Info,
+    star: Star,
+    check: Check,
 };
 
 export function ButtonGroupBlock({

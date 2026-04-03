@@ -9,7 +9,7 @@ interface TestimonialsBlockProps {
         role: string;
         content: string;
         rating: number;
-        avatar: string;
+        avatar?: string;
     }[];
 }
 
@@ -25,9 +25,10 @@ export function TestimonialsBlock({
                     <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">
                         {heading}
                     </h2>
-                    <p className="text-primary-foreground/80 max-w-2xl mx-auto">
-                        {description}
-                    </p>
+                    <div
+                        className="prose prose-invert prose-p:text-primary-foreground/80 prose-strong:text-primary-foreground max-w-2xl mx-auto [&>*]:text-center"
+                        dangerouslySetInnerHTML={{ __html: description ?? "" }}
+                    />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -44,9 +45,9 @@ export function TestimonialsBlock({
                                     />
                                 ))}
                             </div>
-                            <p className="text-primary-foreground/90 mb-6 leading-relaxed">
-                                {`"${testimonial.content}"`}
-                            </p>
+                            <div className="text-primary-foreground/90 mb-6 leading-relaxed prose prose-sm prose-invert max-w-none"
+                                dangerouslySetInnerHTML={{ __html: testimonial.content ?? "" }}
+                            />
                             <div className="flex items-center gap-3">
                                 {testimonial.avatar && (
                                     <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-primary-foreground/20 shrink-0">

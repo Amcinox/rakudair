@@ -43,6 +43,7 @@ import {
 import { toast } from "sonner";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useNavigation, type NavItem } from "@/features/navigation/hooks/useNavigation";
+import { LinkPicker } from "@/components/dashboard/link-picker";
 import {
     GripVertical,
     ChevronRight,
@@ -710,10 +711,17 @@ export default function NavigationPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>URL</Label>
-                                <Input
+                                <Label>Link</Label>
+                                <LinkPicker
                                     value={form.url}
-                                    onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+                                    onChange={(url, meta) => {
+                                        setForm((f) => ({
+                                            ...f,
+                                            url,
+                                            // Auto-fill label if empty
+                                            ...(meta && !f.label.trim() ? { label: meta.title } : {}),
+                                        }));
+                                    }}
                                     placeholder="/about or https://..."
                                 />
                             </div>
