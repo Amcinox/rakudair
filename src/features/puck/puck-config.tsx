@@ -32,10 +32,6 @@ export type Components = {
         titleSuffix: string;
         description: string;
         buttons: { text: string; link: string; variant: "default" | "outline" | "secondary" | "ghost"; icon: "none" | "arrow" | "external" | "play" | "download" | "mail" | "info" | "star" | "check" }[];
-        ctaText: string;
-        ctaLink: string;
-        secondaryCtaText: string;
-        secondaryCtaLink: string;
         heroImage: string;
         heroImageAlt: string;
     };
@@ -137,10 +133,6 @@ export const puckConfig: Config<Components> = {
                         icon: "arrow",
                     },
                 },
-                ctaText: { type: "text", label: "CTA Button Text" },
-                ctaLink: { type: "text", label: "CTA Link" },
-                secondaryCtaText: { type: "text", label: "Secondary CTA Text" },
-                secondaryCtaLink: { type: "text", label: "Secondary CTA Link" },
                 heroImage: { type: "text", label: "Background Image URL" },
                 heroImageAlt: { type: "text", label: "Image Alt Text" },
             },
@@ -155,10 +147,6 @@ export const puckConfig: Config<Components> = {
                     { text: "冒険を始める", link: "/blog", variant: "default", icon: "arrow" },
                     { text: "私たちについて", link: "/about", variant: "outline", icon: "none" },
                 ],
-                ctaText: "冒険を始める",
-                ctaLink: "/blog",
-                secondaryCtaText: "私たちについて",
-                secondaryCtaLink: "/about",
                 heroImage: "/hero-desert.jpg",
                 heroImageAlt: "サハラ砂漠の美しい風景",
             },
@@ -200,24 +188,24 @@ export const puckConfig: Config<Components> = {
             defaultProps: {
                 heading: "なぜラクダイル？",
                 description:
-                    "私たちは単なる旅行ブログではありません。あなたの冒険心を刺激し、夢を現実にするためのインスピレーションをお届けします。",
+                    "<p>私たちは単なる旅行ブログではありません。あなたの冒険心を刺激し、夢を現実にするためのインスピレーションをお届けします。</p>",
                 items: [
                     {
                         icon: "map-pin",
                         title: "未知の地を探索",
                         description:
-                            "誰も知らない秘密の場所、地図にない絶景スポットをご紹介します。",
+                            "<p>誰も知らない秘密の場所、地図にない絶景スポットをご紹介します。</p>",
                     },
                     {
                         icon: "compass",
                         title: "冒険のガイド",
                         description:
-                            "初心者から上級者まで、あなたの旅をサポートする詳細なガイド。",
+                            "<p>初心者から上級者まで、あなたの旅をサポートする詳細なガイド。</p>",
                     },
                     {
                         icon: "camera",
                         title: "美しい瞬間",
-                        description: "息をのむような写真と共に、旅の感動をお届けします。",
+                        description: "<p>息をのむような写真と共に、旅の感動をお届けします。</p>",
                     },
                 ],
             },
@@ -234,7 +222,7 @@ export const puckConfig: Config<Components> = {
             },
             defaultProps: {
                 heading: "最新の冒険記",
-                description: "砂漠の旅、文化探訪、星空観測。様々なテーマの記事をお楽しみください。",
+                description: "<p>砂漠の旅、文化探訪、星空観測。様々なテーマの記事をお楽しみください。</p>",
                 linkText: "すべての記事を見る",
                 linkUrl: "/blog",
                 count: 3,
@@ -265,27 +253,27 @@ export const puckConfig: Config<Components> = {
             },
             defaultProps: {
                 heading: "読者の声",
-                description: "ラクダイルと一緒に旅をした読者の皆様からの温かいメッセージ",
+                description: "<p>ラクダイルと一緒に旅をした読者の皆様からの温かいメッセージ</p>",
                 items: [
                     {
                         name: "田中 美咲",
                         role: "フォトグラファー",
                         content:
-                            "ラクダイルの記事に触発されて、ついにサハラ砂漠への旅を実現しました。人生を変える経験でした。",
+                            "<p>ラクダイルの記事に触発されて、ついにサハラ砂漠への旅を実現しました。人生を変える経験でした。</p>",
                         rating: 5,
                     },
                     {
                         name: "佐藤 健太",
                         role: "バックパッカー",
                         content:
-                            "詳細な旅行ガイドのおかげで、安心して冒険に出かけることができました。本当に感謝しています。",
+                            "<p>詳細な旅行ガイドのおかげで、安心して冒険に出かけることができました。本当に感謝しています。</p>",
                         rating: 5,
                     },
                     {
                         name: "山田 花子",
                         role: "旅行愛好家",
                         content:
-                            "美しい写真と心に響く文章。毎回の更新を楽しみにしています。",
+                            "<p>美しい写真と心に響く文章。毎回の更新を楽しみにしています。</p>",
                         rating: 5,
                     },
                 ],
@@ -305,7 +293,7 @@ export const puckConfig: Config<Components> = {
                 logoAlt: "Rakudair Mascot",
                 title: "次の冒険を一緒に計画しませんか？",
                 description:
-                    "ニュースレターに登録して、最新の旅行記、特別なガイド、そしてここでしか読めないコンテンツを受け取りましょう。",
+                    "<p>ニュースレターに登録して、最新の旅行記、特別なガイド、そしてここでしか読めないコンテンツを受け取りましょう。</p>",
             },
             render: CtaNewsletterBlock,
         },

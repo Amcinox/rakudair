@@ -17,11 +17,6 @@ interface HeroBlockProps {
     titleSuffix: string;
     description: string;
     buttons: HeroButton[];
-    // Legacy fields for backward compatibility
-    ctaText?: string;
-    ctaLink?: string;
-    secondaryCtaText?: string;
-    secondaryCtaLink?: string;
     heroImage: string;
     heroImageAlt: string;
 }
@@ -45,23 +40,10 @@ export function HeroBlock({
     titleSuffix,
     description,
     buttons,
-    ctaText,
-    ctaLink,
-    secondaryCtaText,
-    secondaryCtaLink,
     heroImage,
     heroImageAlt,
 }: HeroBlockProps) {
-    // Auto-migrate legacy data for rendering purpose
     const renderButtons = buttons && buttons.length > 0 ? buttons : [];
-    if (renderButtons.length === 0 && (ctaText || secondaryCtaText)) {
-        if (ctaText) {
-            renderButtons.push({ text: ctaText, link: ctaLink || "#", variant: "default", icon: "arrow" });
-        }
-        if (secondaryCtaText) {
-            renderButtons.push({ text: secondaryCtaText, link: secondaryCtaLink || "#", variant: "outline", icon: "none" });
-        }
-    }
 
     return (
         <section className="relative min-h-screen flex items-center justify-center pt-20">
@@ -95,7 +77,8 @@ export function HeroBlock({
                     {titleSuffix}
                 </h1>
 
-                <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
+                <div
+                    className="prose prose-lg dark:prose-invert prose-p:text-muted-foreground prose-strong:text-foreground max-w-2xl mx-auto mb-10 text-center [&>*]:mx-auto"
                     dangerouslySetInnerHTML={{ __html: description ?? "" }}
                 />
 

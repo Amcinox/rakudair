@@ -25,7 +25,8 @@ export function TestimonialsBlock({
                     <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">
                         {heading}
                     </h2>
-                    <p className="text-primary-foreground/80 max-w-2xl mx-auto"
+                    <div
+                        className="prose prose-invert prose-p:text-primary-foreground/80 prose-strong:text-primary-foreground max-w-2xl mx-auto [&>*]:text-center"
                         dangerouslySetInnerHTML={{ __html: description ?? "" }}
                     />
                 </div>

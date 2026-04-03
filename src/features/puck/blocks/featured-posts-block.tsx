@@ -47,7 +47,8 @@ export function FeaturedPostsBlock({
                         <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
                             {heading}
                         </h2>
-                        <p className="text-muted-foreground max-w-xl mx-auto"
+                        <div
+                            className="prose prose-neutral dark:prose-invert prose-p:text-muted-foreground prose-strong:text-foreground max-w-xl mx-auto [&>*]:text-center"
                             dangerouslySetInnerHTML={{ __html: description ?? "" }}
                         />
                         <p className="text-muted-foreground/60 mt-8 text-sm">
@@ -67,7 +68,7 @@ export function FeaturedPostsBlock({
                         <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
                             {heading}
                         </h2>
-                        <p className="text-muted-foreground max-w-xl" dangerouslySetInnerHTML={{ __html: description ?? "" }} />
+                        <div className="prose prose-neutral dark:prose-invert prose-p:text-muted-foreground prose-strong:text-foreground max-w-xl" dangerouslySetInnerHTML={{ __html: description ?? "" }} />
                     </div>
                     {linkText && (
                         <Link
