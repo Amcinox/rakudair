@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ImagePicker } from "@/components/dashboard/image-picker";
+import { LinkPicker } from "@/components/dashboard/link-picker";
 import {
     Globe,
     Palette,
@@ -40,6 +41,9 @@ import {
     Link as LinkIcon,
     Copyright,
     FileText,
+    Mail,
+    MapPin,
+    MessageSquare,
 } from "lucide-react";
 
 // ---------- Types ----------
@@ -47,6 +51,12 @@ import {
 interface LegalLink {
     label: string;
     url: string;
+}
+
+interface FaqItem {
+    icon: string;
+    title: string;
+    description: string;
 }
 
 // ---------- Component ----------
@@ -83,11 +93,25 @@ export default function SettingsPage() {
         footerCopyrightText: "© 2025 Rakuda Air. All rights reserved.",
         footerDescription: "",
         footerLogoUrl: "",
+        // Contact page
+        contactHeroTitle: "お気軽にご連絡ください",
+        contactHeroDescription: "コラボレーション、取材依頼、広告のご相談、その他のお問い合わせをお待ちしております。",
+        contactLocation: "東京, 日本",
+        contactResponseTime: "1〜3営業日",
+        contactShowFaq: true,
+        contactShowNewsletter: true,
     });
 
     const [legalLinks, setLegalLinks] = useState<LegalLink[]>([
         { label: "プライバシーポリシー", url: "/privacy" },
         { label: "利用規約", url: "/terms" },
+    ]);
+
+    const [contactFaqItems, setContactFaqItems] = useState<FaqItem[]>([
+        { icon: "✈️", title: "コラボレーション", description: "旅行ブランド・観光局との提携、スポンサード記事のご依頼" },
+        { icon: "📸", title: "取材・撮影依頼", description: "写真・動画の使用許可、取材同行のご相談" },
+        { icon: "📝", title: "寄稿・ゲスト投稿", description: "ゲストライターとしての記事投稿、コンテンツ共有" },
+        { icon: "💼", title: "ビジネスのご相談", description: "広告掲載、アフィリエイト、その他のビジネス提案" },
     ]);
 
     useEffect(() => {
@@ -122,7 +146,27 @@ export default function SettingsPage() {
                     footerCopyrightText: (data.footerCopyrightText as string) ?? f.footerCopyrightText,
                     footerDescription: (data.footerDescription as string) ?? f.footerDescription,
                     footerLogoUrl: (data.footerLogoUrl as string) ?? f.footerLogoUrl,
+                    contactHeroTitle: (data.contactHeroTitle as string) ?? f.contactHeroTitle,
+                    contactHeroDescription: (data.contactHeroDescription as string) ?? f.contactHeroDescription,
+                    contactLocation: (data.contactLocation as string) ?? f.contactLocation,
+                    contactResponseTime: (data.contactResponseTime as string) ?? f.contactResponseTime,
+                    contactShowFaq: data.contactShowFaq !== undefined ? Boolean(data.contactShowFaq) : f.contactShowFaq,
+                    contactShowNewsletter: data.contactShowNewsletter !== undefined ? Boolean(data.contactShowNewsletter) : f.contactShowNewsletter,
                 }));
+
+                // Parse contact FAQ items
+                if (data.contactFaqItems) {
+                    try {
+                        const parsed = typeof data.contactFaqItems === "string"
+                            ? JSON.parse(data.contactFaqItems)
+                            : data.contactFaqItems;
+                        if (Array.isArray(parsed)) {
+                            setContactFaqItems(parsed);
+                        }
+                    } catch {
+                        // keep default
+                    }
+                }
 
                 // Parse legal links
                 if (data.footerLegalLinks) {
@@ -147,6 +191,7 @@ export default function SettingsPage() {
         const batch = [
             ...Object.entries(form).map(([key, value]) => ({ key, value })),
             { key: "footerLegalLinks", value: legalLinks },
+            { key: "contactFaqItems", value: contactFaqItems },
         ];
 
         const res = await fetch("/api/settings", {
@@ -178,6 +223,22 @@ export default function SettingsPage() {
     function updateLegalLink(index: number, field: keyof LegalLink, value: string) {
         setLegalLinks((prev) =>
             prev.map((link, i) => (i === index ? { ...link, [field]: value } : link))
+        );
+    }
+
+    // ---------- Contact FAQ helpers ----------
+
+    function addFaqItem() {
+        setContactFaqItems((prev) => [...prev, { icon: "❓", title: "", description: "" }]);
+    }
+
+    function removeFaqItem(index: number) {
+        setContactFaqItems((prev) => prev.filter((_, i) => i !== index));
+    }
+
+    function updateFaqItem(index: number, field: keyof FaqItem, value: string) {
+        setContactFaqItems((prev) =>
+            prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
         );
     }
 
@@ -226,6 +287,10 @@ export default function SettingsPage() {
                     <TabsTrigger value="header-footer" className="gap-1.5">
                         <LayoutDashboard className="w-3.5 h-3.5" />
                         Header & Footer
+                    </TabsTrigger>
+                    <TabsTrigger value="contact" className="gap-1.5">
+                        <Mail className="w-3.5 h-3.5" />
+                        Contact
                     </TabsTrigger>
                     <TabsTrigger value="advanced" className="gap-1.5">
                         <Settings2 className="w-3.5 h-3.5" />
@@ -607,39 +672,214 @@ export default function SettingsPage() {
                                 </Button>
                             </div>
                         ) : (
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 {legalLinks.map((link, index) => (
                                     <div
                                         key={index}
-                                        className="flex items-center gap-2 rounded-lg border bg-card p-2.5 transition-all hover:bg-muted/50"
+                                        className="rounded-lg border bg-card p-3 space-y-3 transition-all hover:bg-muted/30"
                                     >
-                                        <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-                                        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        <div className="flex items-center gap-2">
+                                            <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
                                             <Input
                                                 value={link.label}
                                                 onChange={(e) => updateLegalLink(index, "label", e.target.value)}
-                                                placeholder="Link label"
-                                                className="h-8 text-sm"
+                                                placeholder="Link label (e.g. Privacy Policy)"
+                                                className="h-8 text-sm flex-1"
                                             />
-                                            <Input
+                                            <button
+                                                type="button"
+                                                onClick={() => removeLegalLink(index)}
+                                                className="p-1.5 rounded text-destructive/60 hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                                                title="Remove"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                        <div className="pl-6">
+                                            <LinkPicker
                                                 value={link.url}
-                                                onChange={(e) => updateLegalLink(index, "url", e.target.value)}
-                                                placeholder="/privacy"
-                                                className="h-8 text-sm"
+                                                onChange={(url) => updateLegalLink(index, "url", url)}
+                                                placeholder="/privacy or https://..."
                                             />
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => removeLegalLink(index)}
-                                            className="p-1.5 rounded text-destructive/60 hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
-                                            title="Remove"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
                                     </div>
                                 ))}
                             </div>
                         )}
+                    </div>
+                </TabsContent>
+
+                {/* =============== Contact Tab =============== */}
+                <TabsContent value="contact" className="space-y-6">
+                    {/* Hero Section */}
+                    <div className="dash-card rounded-lg p-6 space-y-5">
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                                <MessageSquare className="w-4 h-4 text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-sm">Hero Section</h3>
+                                <p className="text-xs text-muted-foreground">Heading and description shown at the top of the contact page</p>
+                            </div>
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                            <Label>Heading</Label>
+                            <Input
+                                value={form.contactHeroTitle}
+                                onChange={(e) => setForm((f) => ({ ...f, contactHeroTitle: e.target.value }))}
+                                placeholder="お気軽にご連絡ください"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Description</Label>
+                            <Textarea
+                                value={form.contactHeroDescription}
+                                onChange={(e) => setForm((f) => ({ ...f, contactHeroDescription: e.target.value }))}
+                                rows={2}
+                                placeholder="コラボレーション、取材依頼…"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Contact Details */}
+                    <div className="dash-card rounded-lg p-6 space-y-5">
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                                <MapPin className="w-4 h-4 text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-sm">Contact Details</h3>
+                                <p className="text-xs text-muted-foreground">Location and response time shown in the info cards</p>
+                            </div>
+                        </div>
+                        <Separator />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Location</Label>
+                                <Input
+                                    value={form.contactLocation}
+                                    onChange={(e) => setForm((f) => ({ ...f, contactLocation: e.target.value }))}
+                                    placeholder="東京, 日本"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Response Time</Label>
+                                <Input
+                                    value={form.contactResponseTime}
+                                    onChange={(e) => setForm((f) => ({ ...f, contactResponseTime: e.target.value }))}
+                                    placeholder="1〜3営業日"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Visibility Toggles */}
+                    <div className="dash-card rounded-lg p-6 space-y-5">
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                                <Settings2 className="w-4 h-4 text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-sm">Section Visibility</h3>
+                                <p className="text-xs text-muted-foreground">Toggle optional sections on the contact page</p>
+                            </div>
+                        </div>
+                        <Separator />
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium">FAQ Section</p>
+                                    <p className="text-xs text-muted-foreground">Common inquiry categories shown below the form</p>
+                                </div>
+                                <Switch
+                                    checked={form.contactShowFaq}
+                                    onCheckedChange={(v) => setForm((f) => ({ ...f, contactShowFaq: v }))}
+                                />
+                            </div>
+                            <Separator />
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium">Newsletter CTA</p>
+                                    <p className="text-xs text-muted-foreground">Newsletter signup section at the bottom of the page</p>
+                                </div>
+                                <Switch
+                                    checked={form.contactShowNewsletter}
+                                    onCheckedChange={(v) => setForm((f) => ({ ...f, contactShowNewsletter: v }))}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* FAQ Items Editor */}
+                    <div className={`transition-opacity ${form.contactShowFaq ? "opacity-100" : "opacity-40 pointer-events-none"}`}>
+                        <div className="dash-card rounded-lg p-6 space-y-5">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                                        <FileText className="w-4 h-4 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-sm">FAQ Items</h3>
+                                        <p className="text-xs text-muted-foreground">Inquiry categories shown in the FAQ section</p>
+                                    </div>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={addFaqItem} className="gap-1.5">
+                                    <Plus className="w-3.5 h-3.5" />
+                                    Add Item
+                                </Button>
+                            </div>
+                            <Separator />
+                            {contactFaqItems.length === 0 ? (
+                                <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
+                                    <FileText className="w-8 h-8 opacity-40" />
+                                    <p className="text-sm">No FAQ items added yet.</p>
+                                    <Button variant="outline" size="sm" onClick={addFaqItem} className="gap-1.5 mt-1">
+                                        <Plus className="w-3.5 h-3.5" />
+                                        Add your first item
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {contactFaqItems.map((item, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex items-start gap-2 rounded-lg border bg-card p-2.5 transition-all hover:bg-muted/50"
+                                        >
+                                            <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-2" />
+                                            <div className="flex-1 grid grid-cols-1 md:grid-cols-[60px_1fr_2fr] gap-2">
+                                                <Input
+                                                    value={item.icon}
+                                                    onChange={(e) => updateFaqItem(index, "icon", e.target.value)}
+                                                    placeholder="✈️"
+                                                    className="h-8 text-sm text-center"
+                                                />
+                                                <Input
+                                                    value={item.title}
+                                                    onChange={(e) => updateFaqItem(index, "title", e.target.value)}
+                                                    placeholder="Title"
+                                                    className="h-8 text-sm"
+                                                />
+                                                <Input
+                                                    value={item.description}
+                                                    onChange={(e) => updateFaqItem(index, "description", e.target.value)}
+                                                    placeholder="Description"
+                                                    className="h-8 text-sm"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeFaqItem(index)}
+                                                className="p-1.5 rounded text-destructive/60 hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0 mt-0.5"
+                                                title="Remove"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </TabsContent>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Heart, Bookmark, Share2, Check, Link2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -46,6 +46,126 @@ function toggleStoredSlug(key: string, slug: string): boolean {
     }
 }
 
+interface ActionButtonsProps {
+    liked: boolean;
+    bookmarked: boolean;
+    copied: boolean;
+    likeAnimate: boolean;
+    mobile?: boolean;
+    baseBtn: string;
+    title: string;
+    shareUrl: string;
+    onLike: () => void;
+    onBookmark: () => void;
+    onCopyLink: () => void;
+    onShare: (platform: string) => void;
+}
+
+function ActionButtons({
+    liked,
+    bookmarked,
+    copied,
+    likeAnimate,
+    mobile = false,
+    baseBtn,
+    title,
+    shareUrl,
+    onLike,
+    onBookmark,
+    onCopyLink,
+    onShare,
+}: ActionButtonsProps) {
+    return (
+        <>
+            {/* Like */}
+            <button
+                onClick={onLike}
+                title={liked ? "気に入り済み" : "気に入る"}
+                className={`${baseBtn} ${liked
+                        ? "bg-rose-100 dark:bg-rose-900/30 text-rose-500"
+                        : "bg-secondary text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                    } ${likeAnimate ? "scale-125" : "scale-100"}`}
+            >
+                <Heart
+                    className={`w-5 h-5 transition-all ${liked ? "fill-rose-500" : ""} ${likeAnimate ? "scale-110" : ""}`}
+                />
+            </button>
+
+            {/* Bookmark */}
+            <button
+                onClick={onBookmark}
+                title={bookmarked ? "ブックマーク済み" : "ブックマーク"}
+                className={`${baseBtn} ${bookmarked
+                        ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600"
+                        : "bg-secondary text-muted-foreground hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                    }`}
+            >
+                <Bookmark
+                    className={`w-5 h-5 transition-all ${bookmarked ? "fill-amber-600" : ""}`}
+                />
+            </button>
+
+            {/* Copy link */}
+            <button
+                onClick={onCopyLink}
+                title="リンクをコピー"
+                className={`${baseBtn} ${copied
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-600"
+                        : "bg-secondary text-muted-foreground hover:text-primary hover:bg-primary/10"
+                    }`}
+            >
+                {copied ? (
+                    <Check className="w-5 h-5 text-green-600" />
+                ) : (
+                    <Link2 className="w-5 h-5" />
+                )}
+            </button>
+
+            {!mobile && (
+                <div className="w-full h-px bg-border my-1" />
+            )}
+
+            {/* Twitter/X */}
+            <button
+                onClick={() => onShare("twitter")}
+                title="X (Twitter) でシェア"
+                className={`${baseBtn} bg-secondary text-muted-foreground hover:text-[#1DA1F2] hover:bg-[#1DA1F2]/10`}
+            >
+                <XIcon className="w-4 h-4" />
+            </button>
+
+            {/* Facebook */}
+            <button
+                onClick={() => onShare("facebook")}
+                title="Facebookでシェア"
+                className={`${baseBtn} bg-secondary text-muted-foreground hover:text-[#4267B2] hover:bg-[#4267B2]/10`}
+            >
+                <FacebookIcon className="w-4 h-4" />
+            </button>
+
+            {/* Native share (mobile) */}
+            {typeof navigator !== "undefined" && "share" in navigator && (
+                <button
+                    onClick={() => {
+                        navigator
+                            .share({
+                                title,
+                                url: typeof window !== "undefined"
+                                    ? window.location.href
+                                    : shareUrl,
+                            })
+                            .catch(() => { });
+                    }}
+                    title="その他でシェア"
+                    className={`${baseBtn} bg-secondary text-muted-foreground hover:text-primary hover:bg-primary/10`}
+                >
+                    <Share2 className="w-4 h-4" />
+                </button>
+            )}
+        </>
+    );
+}
+
 interface SocialShareProps {
     title: string;
     slug?: string;
@@ -56,16 +176,14 @@ export function SocialShare({ title, slug = "", url }: SocialShareProps) {
     const shareUrl =
         url ?? (typeof window !== "undefined" ? window.location.href : "");
 
-    const [liked, setLiked] = useState(false);
-    const [bookmarked, setBookmarked] = useState(false);
+    const [liked, setLiked] = useState(() =>
+        slug ? getStoredSlugs(LIKED_KEY).includes(slug) : false
+    );
+    const [bookmarked, setBookmarked] = useState(() =>
+        slug ? getStoredSlugs(BOOKMARKED_KEY).includes(slug) : false
+    );
     const [copied, setCopied] = useState(false);
     const [likeAnimate, setLikeAnimate] = useState(false);
-
-    useEffect(() => {
-        if (!slug) return;
-        setLiked(getStoredSlugs(LIKED_KEY).includes(slug));
-        setBookmarked(getStoredSlugs(BOOKMARKED_KEY).includes(slug));
-    }, [slug]);
 
     const handleLike = () => {
         if (!slug) return;
@@ -102,7 +220,7 @@ export function SocialShare({ title, slug = "", url }: SocialShareProps) {
             });
             setTimeout(() => setCopied(false), 2000);
         } catch {
-            toast.error("コピーに失敗しました");
+            toast.error("コpピーに失敗しました");
         }
     };
 
@@ -125,109 +243,30 @@ export function SocialShare({ title, slug = "", url }: SocialShareProps) {
     const baseBtn =
         "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 relative";
 
-    const ActionButtons = ({ mobile = false }: { mobile?: boolean }) => (
-        <>
-            {/* Like */}
-            <button
-                onClick={handleLike}
-                title={liked ? "気に入り済み" : "気に入る"}
-                className={`${baseBtn} ${
-                    liked
-                        ? "bg-rose-100 dark:bg-rose-900/30 text-rose-500"
-                        : "bg-secondary text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20"
-                } ${likeAnimate ? "scale-125" : "scale-100"}`}
-            >
-                <Heart
-                    className={`w-5 h-5 transition-all ${liked ? "fill-rose-500" : ""} ${likeAnimate ? "scale-110" : ""}`}
-                />
-            </button>
-
-            {/* Bookmark */}
-            <button
-                onClick={handleBookmark}
-                title={bookmarked ? "ブックマーク済み" : "ブックマーク"}
-                className={`${baseBtn} ${
-                    bookmarked
-                        ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600"
-                        : "bg-secondary text-muted-foreground hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                }`}
-            >
-                <Bookmark
-                    className={`w-5 h-5 transition-all ${bookmarked ? "fill-amber-600" : ""}`}
-                />
-            </button>
-
-            {/* Copy link */}
-            <button
-                onClick={handleCopyLink}
-                title="リンクをコピー"
-                className={`${baseBtn} ${
-                    copied
-                        ? "bg-green-100 dark:bg-green-900/30 text-green-600"
-                        : "bg-secondary text-muted-foreground hover:text-primary hover:bg-primary/10"
-                }`}
-            >
-                {copied ? (
-                    <Check className="w-5 h-5 text-green-600" />
-                ) : (
-                    <Link2 className="w-5 h-5" />
-                )}
-            </button>
-
-            {!mobile && (
-                <div className="w-full h-px bg-border my-1" />
-            )}
-
-            {/* Twitter/X */}
-            <button
-                onClick={() => handleShare("twitter")}
-                title="X (Twitter) でシェア"
-                className={`${baseBtn} bg-secondary text-muted-foreground hover:text-[#1DA1F2] hover:bg-[#1DA1F2]/10`}
-            >
-                <XIcon className="w-4 h-4" />
-            </button>
-
-            {/* Facebook */}
-            <button
-                onClick={() => handleShare("facebook")}
-                title="Facebookでシェア"
-                className={`${baseBtn} bg-secondary text-muted-foreground hover:text-[#4267B2] hover:bg-[#4267B2]/10`}
-            >
-                <FacebookIcon className="w-4 h-4" />
-            </button>
-
-            {/* Native share (mobile) */}
-            {typeof navigator !== "undefined" && "share" in navigator && (
-                <button
-                    onClick={() => {
-                        navigator
-                            .share({
-                                title,
-                                url: typeof window !== "undefined"
-                                    ? window.location.href
-                                    : shareUrl,
-                            })
-                            .catch(() => {});
-                    }}
-                    title="その他でシェア"
-                    className={`${baseBtn} bg-secondary text-muted-foreground hover:text-primary hover:bg-primary/10`}
-                >
-                    <Share2 className="w-4 h-4" />
-                </button>
-            )}
-        </>
-    );
+    const sharedProps = {
+        liked,
+        bookmarked,
+        copied,
+        likeAnimate,
+        baseBtn,
+        title,
+        shareUrl,
+        onLike: handleLike,
+        onBookmark: handleBookmark,
+        onCopyLink: handleCopyLink,
+        onShare: handleShare,
+    };
 
     return (
         <>
             {/* Desktop sticky sidebar */}
             <aside className="hidden lg:flex flex-col gap-3 sticky top-28 h-fit">
-                <ActionButtons />
+                <ActionButtons {...sharedProps} />
             </aside>
 
             {/* Mobile inline bar */}
             <div className="lg:hidden flex items-center justify-center gap-3 mt-12 pt-8 border-t border-border flex-wrap">
-                <ActionButtons mobile />
+                <ActionButtons {...sharedProps} mobile />
             </div>
         </>
     );

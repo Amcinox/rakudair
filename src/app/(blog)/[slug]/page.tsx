@@ -14,6 +14,9 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
 
+    // Guard against static file requests leaking into this route
+    if (/\.[a-z0-9]+$/i.test(slug)) return { title: "Not Found" };
+
     // Try published first, then any status for authenticated preview
     let [page] = await db
         .select({ title: pages.title, id: pages.id, status: pages.status })
@@ -22,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         .limit(1);
 
     if (!page) {
-        const { userId } = await auth();
+        const { userId } = await auth().catch(() => ({ userId: null }));
         if (userId) {
             [page] = await db
                 .select({ title: pages.title, id: pages.id, status: pages.status })
@@ -66,6 +69,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function StaticPage({ params }: Props) {
     const { slug } = await params;
 
+    // Guard against static file requests leaking into this route
+    if (/\.[a-z0-9]+$/i.test(slug)) notFound();
+
     // Try published first
     let [page] = await db
         .select()
@@ -77,7 +83,7 @@ export default async function StaticPage({ params }: Props) {
 
     // If not published, check for draft + auth
     if (!page) {
-        const { userId } = await auth();
+        const { userId } = await auth().catch(() => ({ userId: null }));
         if (!userId) notFound();
 
         [page] = await db

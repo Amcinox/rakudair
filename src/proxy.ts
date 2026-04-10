@@ -8,6 +8,8 @@ const isPublicApiRoute = createRouteMatcher([
     "/api/contact",
     "/api/webhooks(.*)",
     "/api/uploadthing(.*)",
+    "/api/articles/featured",
+    "/api/articles/posts-block",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
@@ -26,8 +28,8 @@ export default clerkMiddleware(async (auth, request) => {
 
 export const config = {
     matcher: [
-        // Skip Next.js internals and static files
-        "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+        // Skip Next.js internals and static files, but always run for pages and API routes
+        "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?|ttf|otf|map)).*)",
         // Always run for API routes
         "/(api|trpc)(.*)",
     ],

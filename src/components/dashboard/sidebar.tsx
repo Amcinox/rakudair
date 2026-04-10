@@ -17,6 +17,7 @@ import {
     Menu01Icon,
     ArrowLeft01Icon,
     UserMultipleIcon,
+    UserCircleIcon,
     Navigation01Icon,
     ArrowMoveUpLeftIcon,
     NoteIcon,
@@ -80,6 +81,12 @@ const navGroups: NavGroup[] = [
             { title: "Navigation", href: "/dashboard/navigation", icon: Navigation01Icon },
             { title: "Redirects", href: "/dashboard/redirects", icon: ArrowMoveUpLeftIcon },
             { title: "Settings", href: "/dashboard/settings", icon: Settings01Icon },
+        ],
+    },
+    {
+        label: "Account",
+        children: [
+            { title: "Profile", href: "/dashboard/profile", icon: UserCircleIcon },
         ],
     },
 ];
