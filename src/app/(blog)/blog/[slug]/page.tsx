@@ -10,6 +10,7 @@ import {
     seoMetadata,
     tags,
     articleTags,
+    authorProfiles,
 } from "@/lib/db/schema";
 import { eq, and, desc, ne } from "drizzle-orm";
 import { SocialShare } from "@/features/blog/components/social-share";
@@ -182,6 +183,13 @@ export default async function ArticlePage({ params }: Props) {
         )
         .limit(1);
 
+    // Get author profile from DB
+    const [authorProfile] = await db
+        .select()
+        .from(authorProfiles)
+        .where(eq(authorProfiles.clerkId, article.authorId))
+        .limit(1);
+
     // Get related posts — same category, exclude current
     const relatedPosts = article.categoryId
         ? await db
@@ -323,16 +331,16 @@ export default async function ArticlePage({ params }: Props) {
                                 <div className="flex items-center gap-3">
                                     <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20">
                                         <Image
-                                            src="/logo.png"
-                                            alt="Rakudair"
+                                            src={authorProfile?.avatar || "/logo.png"}
+                                            alt={authorProfile?.displayName || "Rakudair"}
                                             fill
                                             className="object-cover"
                                         />
                                     </div>
                                     <div>
-                                        <p className="font-medium text-foreground">Rakudair</p>
+                                        <p className="font-medium text-foreground">{authorProfile?.displayName || "Rakudair"}</p>
                                         <p className="text-sm text-muted-foreground">
-                                            トラベルライター
+                                            {authorProfile?.role || "トラベルライター"}
                                         </p>
                                     </div>
                                 </div>
@@ -358,8 +366,8 @@ export default async function ArticlePage({ params }: Props) {
 
                 {/* Article Content */}
                 <section className="py-12 md:py-16">
-                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex gap-8">
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex gap-10">
                             {/* Social Share Sidebar */}
                             <SocialShare title={article.title} slug={article.slug} />
 
@@ -386,13 +394,44 @@ export default async function ArticlePage({ params }: Props) {
                                     </div>
                                 )}
 
-                                {/* Author Box */}
-                                <AuthorBox
-                                    name="Rakudair"
-                                    bio="世界中の砂漠を旅し、その美しさと文化を記録しています。カメラを片手に、次の冒険へ。"
-                                    avatar="/logo.png"
-                                />
+                                {/* Inline Author Box (mobile) */}
+                                <div className="lg:hidden">
+                                    <AuthorBox
+                                        name={authorProfile?.displayName || "Rakudair"}
+                                        bio={authorProfile?.bio || "世界中の砂漠を旅し、その美しさと文化を記録しています。カメラを片手に、次の冒険へ。"}
+                                        avatar={authorProfile?.avatar || "/logo.png"}
+                                        role={authorProfile?.role || "トラベルライター"}
+                                        location={authorProfile?.location || undefined}
+                                        website={authorProfile?.website || undefined}
+                                        socialTwitter={authorProfile?.socialTwitter || undefined}
+                                        socialInstagram={authorProfile?.socialInstagram || undefined}
+                                        socialYoutube={authorProfile?.socialYoutube || undefined}
+                                        socialFacebook={authorProfile?.socialFacebook || undefined}
+                                        socialTiktok={authorProfile?.socialTiktok || undefined}
+                                        socialGithub={authorProfile?.socialGithub || undefined}
+                                        variant="inline"
+                                    />
+                                </div>
                             </article>
+
+                            {/* Author Sidebar (desktop) */}
+                            <div className="hidden lg:block w-64 shrink-0">
+                                <AuthorBox
+                                    name={authorProfile?.displayName || "Rakudair"}
+                                    bio={authorProfile?.bio || "世界中の砂漠を旅し、その美しさと文化を記録しています。カメラを片手に、次の冒険へ。"}
+                                    avatar={authorProfile?.avatar || "/logo.png"}
+                                    role={authorProfile?.role || "トラベルライター"}
+                                    location={authorProfile?.location || undefined}
+                                    website={authorProfile?.website || undefined}
+                                    socialTwitter={authorProfile?.socialTwitter || undefined}
+                                    socialInstagram={authorProfile?.socialInstagram || undefined}
+                                    socialYoutube={authorProfile?.socialYoutube || undefined}
+                                    socialFacebook={authorProfile?.socialFacebook || undefined}
+                                    socialTiktok={authorProfile?.socialTiktok || undefined}
+                                    socialGithub={authorProfile?.socialGithub || undefined}
+                                    variant="sidebar"
+                                />
+                            </div>
                         </div>
                     </div>
                 </section>

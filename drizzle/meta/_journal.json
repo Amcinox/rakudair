@@ -1,13 +1,27 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1774259870994,
-      "tag": "0000_real_randall_flagg",
-      "breakpoints": true
-    }
-  ]
+    "version": "7",
+    "dialect": "postgresql",
+    "entries": [
+        {
+            "idx": 0,
+            "version": "7",
+            "when": 1774259870994,
+            "tag": "0000_real_randall_flagg",
+            "breakpoints": true
+        },
+        {
+            "idx": 1,
+            "version": "7",
+            "when": 1775197611264,
+            "tag": "0001_misty_doctor_octopus",
+            "breakpoints": true
+        },
+        {
+            "idx": 2,
+            "version": "7",
+            "when": 1775380800000,
+            "tag": "0002_add_author_profiles",
+            "breakpoints": true
+        }
+    ]
 }

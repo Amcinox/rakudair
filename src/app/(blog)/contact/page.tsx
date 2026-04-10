@@ -17,9 +17,52 @@ export default async function ContactPage() {
 
     const contactData = {
         email: contactEmail || "hello@rakudair.com",
-        website: (settings.siteUrl as string) || "rakudair.com",
-        location: "東京, 日本",
+        location: (settings.contactLocation as string) || "東京, 日本",
+        responseTime: (settings.contactResponseTime as string) || "1〜3営業日",
     };
+
+    const heroTitle = (settings.contactHeroTitle as string) || "お気軽にご連絡ください";
+    const heroDescription =
+        (settings.contactHeroDescription as string) ||
+        "コラボレーション、取材依頼、広告のご相談、その他のお問い合わせをお待ちしております。";
+    const showFaq = settings.contactShowFaq !== undefined ? Boolean(settings.contactShowFaq) : true;
+    const showNewsletter = settings.contactShowNewsletter !== undefined ? Boolean(settings.contactShowNewsletter) : true;
+
+    let faqItems: { icon: string; title: string; description: string }[] = [
+        {
+            icon: "✈️",
+            title: "コラボレーション",
+            description: "旅行ブランド・観光局との提携、スポンサード記事のご依頼",
+        },
+        {
+            icon: "📸",
+            title: "取材・撮影依頼",
+            description: "写真・動画の使用許可、取材同行のご相談",
+        },
+        {
+            icon: "📝",
+            title: "寄稿・ゲスト投稿",
+            description: "ゲストライターとしての記事投稿、コンテンツ共有",
+        },
+        {
+            icon: "💼",
+            title: "ビジネスのご相談",
+            description: "広告掲載、アフィリエイト、その他のビジネス提案",
+        },
+    ];
+    if (settings.contactFaqItems) {
+        try {
+            const parsed =
+                typeof settings.contactFaqItems === "string"
+                    ? JSON.parse(settings.contactFaqItems)
+                    : settings.contactFaqItems;
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                faqItems = parsed;
+            }
+        } catch {
+            // keep defaults
+        }
+    }
 
     return (
         <main className="min-h-screen pt-24 pb-16">
@@ -33,10 +76,10 @@ export default async function ContactPage() {
                     className="text-4xl md:text-5xl font-bold text-foreground mb-4"
                     style={{ fontFamily: "var(--font-noto-serif)" }}
                 >
-                    お気軽にご連絡ください
+                    {heroTitle}
                 </h1>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                    コラボレーション、取材依頼、広告のご相談、その他のお問い合わせをお待ちしております。
+                    {heroDescription}
                 </p>
             </section>
 
@@ -99,7 +142,7 @@ export default async function ContactPage() {
                             通常の返信までの目安
                         </p>
                         <span className="text-foreground font-medium text-sm">
-                            1〜3営業日
+                            {contactData.responseTime}
                         </span>
                     </div>
                 </div>
@@ -191,83 +234,62 @@ export default async function ContactPage() {
             </section>
 
             {/* FAQ-like section */}
-            <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
-                <div className="text-center mb-10">
-                    <h2
-                        className="text-2xl font-bold text-foreground mb-2"
-                        style={{ fontFamily: "var(--font-noto-serif)" }}
-                    >
-                        よくあるお問い合わせ
-                    </h2>
-                    <p className="text-muted-foreground text-sm">
-                        以下のカテゴリに該当する場合は、メールの件名にご記載ください
-                    </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                        {
-                            icon: "✈️",
-                            title: "コラボレーション",
-                            description:
-                                "旅行ブランド・観光局との提携、スポンサード記事のご依頼",
-                        },
-                        {
-                            icon: "📸",
-                            title: "取材・撮影依頼",
-                            description:
-                                "写真・動画の使用許可、取材同行のご相談",
-                        },
-                        {
-                            icon: "📝",
-                            title: "寄稿・ゲスト投稿",
-                            description:
-                                "ゲストライターとしての記事投稿、コンテンツ共有",
-                        },
-                        {
-                            icon: "💼",
-                            title: "ビジネスのご相談",
-                            description:
-                                "広告掲載、アフィリエイト、その他のビジネス提案",
-                        },
-                    ].map((item, i) => (
-                        <div
-                            key={i}
-                            className="flex gap-4 p-4 rounded-xl bg-secondary/50 border border-border"
+            {showFaq && faqItems.length > 0 && (
+                <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+                    <div className="text-center mb-10">
+                        <h2
+                            className="text-2xl font-bold text-foreground mb-2"
+                            style={{ fontFamily: "var(--font-noto-serif)" }}
                         >
-                            <span className="text-2xl shrink-0">
-                                {item.icon}
-                            </span>
-                            <div>
-                                <h3 className="font-semibold text-foreground text-sm mb-1">
-                                    {item.title}
-                                </h3>
-                                <p className="text-xs text-muted-foreground leading-relaxed">
-                                    {item.description}
-                                </p>
+                            よくあるお問い合わせ
+                        </h2>
+                        <p className="text-muted-foreground text-sm">
+                            以下のカテゴリに該当する場合は、メールの件名にご記載ください
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {faqItems.map((item, i) => (
+                            <div
+                                key={i}
+                                className="flex gap-4 p-4 rounded-xl bg-secondary/50 border border-border"
+                            >
+                                <span className="text-2xl shrink-0">
+                                    {item.icon}
+                                </span>
+                                <div>
+                                    <h3 className="font-semibold text-foreground text-sm mb-1">
+                                        {item.title}
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                        {item.description}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/* Newsletter CTA */}
-            <section className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-8 text-center">
-                    <Globe className="w-8 h-8 text-primary mx-auto mb-4" />
-                    <h2
-                        className="text-xl font-bold text-foreground mb-2"
-                        style={{ fontFamily: "var(--font-noto-serif)" }}
-                    >
-                        旅の便りを受け取る
-                    </h2>
-                    <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
-                        {siteName}の最新記事や特別コンテンツをメールでお届けします
-                    </p>
-                    <div className="max-w-md mx-auto">
-                        <NewsletterForm variant="footer" />
+            {showNewsletter && (
+                <section className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-8 text-center">
+                        <Globe className="w-8 h-8 text-primary mx-auto mb-4" />
+                        <h2
+                            className="text-xl font-bold text-foreground mb-2"
+                            style={{ fontFamily: "var(--font-noto-serif)" }}
+                        >
+                            旅の便りを受け取る
+                        </h2>
+                        <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
+                            {siteName}の最新記事や特別コンテンツをメールでお届けします
+                        </p>
+                        <div className="max-w-md mx-auto">
+                            <NewsletterForm variant="footer" />
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
         </main>
     );
 }

@@ -63,7 +63,7 @@ export function LinkPicker({ value, onChange, placeholder }: LinkPickerProps) {
                 setOptions(json.data ?? { pages: [], articles: [], categories: [] });
                 setLoaded(true);
             })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => setLoading(false));
     }, [tab, loaded]);
 
@@ -141,7 +141,7 @@ export function LinkPicker({ value, onChange, placeholder }: LinkPickerProps) {
                             />
                         </div>
 
-                        <div className="max-h-[180px] overflow-y-auto rounded-md border bg-card">
+                        <div className="max-h-[220px] overflow-y-auto rounded-md border bg-card">
                             {loading ? (
                                 <div className="flex items-center justify-center py-6 text-xs text-muted-foreground">
                                     Loading…
@@ -158,16 +158,15 @@ export function LinkPicker({ value, onChange, placeholder }: LinkPickerProps) {
                                             key={opt.id}
                                             type="button"
                                             onClick={() => selectOption(opt)}
-                                            className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-muted/60 border-b border-border/50 last:border-b-0 ${
-                                                isSelected ? "bg-primary/5 text-primary" : ""
-                                            }`}
+                                            className={`w-full flex items-start gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-muted/60 border-b border-border/50 last:border-b-0 ${isSelected ? "bg-primary/5 text-primary" : ""
+                                                }`}
                                         >
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-medium truncate text-[13px]">{opt.title}</p>
-                                                <p className="text-[11px] text-muted-foreground truncate">{opt.url}</p>
+                                                <p className="font-medium text-[13px] leading-snug line-clamp-2">{opt.title}</p>
+                                                <p className="text-[11px] text-muted-foreground truncate mt-0.5">{opt.url}</p>
                                             </div>
                                             {isSelected && (
-                                                <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                                                <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
                                             )}
                                         </button>
                                     );

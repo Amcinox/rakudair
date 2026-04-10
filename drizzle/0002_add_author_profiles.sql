@@ -1,0 +1,22 @@
+CREATE TABLE "author_profiles" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"clerk_id" varchar(255) NOT NULL,
+	"display_name" varchar(255) NOT NULL,
+	"slug" varchar(255) NOT NULL,
+	"bio" text,
+	"avatar" text,
+	"role" varchar(100),
+	"location" varchar(255),
+	"website" varchar(500),
+	"social_twitter" varchar(500),
+	"social_instagram" varchar(500),
+	"social_youtube" varchar(500),
+	"social_facebook" varchar(500),
+	"social_tiktok" varchar(500),
+	"social_github" varchar(500),
+	"metadata" jsonb,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "author_profiles_clerk_id_unique" UNIQUE("clerk_id"),
+	CONSTRAINT "author_profiles_slug_unique" UNIQUE("slug")
+);

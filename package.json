@@ -4,11 +4,11 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "build": "next build",
+        "build": "bun src/lib/db/migrate.ts && next build",
         "start": "next start",
         "lint": "eslint",
         "db:generate": "drizzle-kit generate",
-        "db:migrate": "drizzle-kit migrate",
+        "db:migrate": "bun src/lib/db/migrate.ts",
         "db:push": "drizzle-kit push",
         "db:studio": "drizzle-kit studio"
     },
@@ -74,6 +74,7 @@
         "eslint": "^9",
         "eslint-config-next": "16.2.1",
         "tailwindcss": "^4",
+        "tsx": "^4.21.0",
         "typescript": "^5"
     }
 }

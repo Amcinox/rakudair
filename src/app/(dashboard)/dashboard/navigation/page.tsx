@@ -160,11 +160,10 @@ function SortableNavItem({
     return (
         <div ref={setNodeRef} style={style} className={`group ${isDragging ? "opacity-40" : ""}`}>
             <div
-                className={`flex items-center gap-2 rounded-lg border bg-card p-2.5 transition-all hover:bg-muted/50 ${
-                    isNestTarget
+                className={`flex items-center gap-2 rounded-lg border bg-card p-2.5 transition-all hover:bg-muted/50 ${isNestTarget
                         ? "ring-2 ring-primary border-primary/40 bg-primary/5"
                         : node.depth === 0 ? "border-border" : node.depth === 1 ? "border-border/60" : "border-border/40"
-                }`}
+                    }`}
                 style={{ marginLeft: `${node.depth * 28}px` }}
             >
                 <button
@@ -687,7 +686,7 @@ export default function NavigationPage() {
 
                 {/* Create / Edit Dialog */}
                 <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogContent>
+                    <DialogContent className="max-h-[90dvh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>
                                 {editing ? "Edit Navigation Item" : form.parentId ? "Add Child Item" : "Add Navigation Item"}
