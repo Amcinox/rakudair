@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, createElement } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,7 @@ import {
     Trophy, Flag, Map, Landmark, TreePine, Flower, Bird, Fish, Dog, Cat, type LucideIcon,
 } from "lucide-react";
 import { useConfirm } from "@/hooks/use-confirm";
+import { generateSlug } from "@/lib/slug";
 import { useCategories, type Category } from "@/features/categories/hooks/useCategories";
 
 const ICON_OPTIONS: { name: string; Icon: LucideIcon }[] = [
@@ -81,11 +82,13 @@ export default function CategoriesPage() {
     const [editing, setEditing] = useState<Category | null>(null);
     const [form, setForm] = useState({
         name: "",
+        slug: "",
         description: "",
         color: "#b91c1c",
         icon: "",
         sortOrder: 0,
     });
+    const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 
     const { categories, loading, create, update, remove } = useCategories();
     const [ConfirmDialog, confirm] = useConfirm({
@@ -97,14 +100,17 @@ export default function CategoriesPage() {
 
     function openCreate() {
         setEditing(null);
-        setForm({ name: "", description: "", color: "#b91c1c", icon: "", sortOrder: 0 });
+        setSlugManuallyEdited(false);
+        setForm({ name: "", slug: "", description: "", color: "#b91c1c", icon: "", sortOrder: 0 });
         setDialogOpen(true);
     }
 
     function openEdit(cat: Category) {
         setEditing(cat);
+        setSlugManuallyEdited(true); // don't auto-overwrite existing slug
         setForm({
             name: cat.name,
+            slug: cat.slug ?? "",
             description: cat.description ?? "",
             color: cat.color ?? "#b91c1c",
             icon: cat.icon ?? "",
@@ -155,7 +161,7 @@ export default function CategoriesPage() {
                         <DialogTrigger asChild>
                             <Button onClick={openCreate} className="btn-gold">Add Category</Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-lg">
+                        <DialogContent className="sm:max-w-lg max-h-[90dvh] overflow-y-auto">
                             <DialogHeader>
                                 <DialogTitle>
                                     {editing ? "Edit Category" : "New Category"}
@@ -169,7 +175,7 @@ export default function CategoriesPage() {
                                         style={{ backgroundColor: form.color + "20", color: form.color }}
                                     >
                                         {SelectedIcon ? (
-                                            <SelectedIcon className="w-6 h-6" />
+                                            createElement(SelectedIcon, { className: "w-6 h-6" })
                                         ) : (
                                             <div className="w-6 h-6 rounded-full" style={{ backgroundColor: form.color }} />
                                         )}
@@ -189,12 +195,32 @@ export default function CategoriesPage() {
                                     <Input
                                         id="name"
                                         value={form.name}
-                                        onChange={(e) =>
-                                            setForm({ ...form, name: e.target.value })
-                                        }
+                                        onChange={(e) => {
+                                            const name = e.target.value;
+                                            const autoSlug = slugManuallyEdited
+                                                ? form.slug
+                                                : generateSlug(name, "category");
+                                            setForm({ ...form, name, slug: autoSlug });
+                                        }}
                                         placeholder="e.g. City Guides"
                                         required
                                     />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="slug">Slug</Label>
+                                    <Input
+                                        id="slug"
+                                        value={form.slug}
+                                        onChange={(e) => {
+                                            setSlugManuallyEdited(true);
+                                            setForm({ ...form, slug: e.target.value });
+                                        }}
+                                        placeholder="e.g. city-guides"
+                                        className="font-mono text-sm"
+                                    />
+                                    <p className="text-[11px] text-muted-foreground">
+                                        Used in URLs. Leave blank to auto-generate. Required for Japanese names.
+                                    </p>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="description">Description</Label>
@@ -206,6 +232,7 @@ export default function CategoriesPage() {
                                         }
                                         placeholder="Optional description"
                                         rows={2}
+                                        className="w-full max-w-full resize-none max-h-32 overflow-y-auto"
                                     />
                                 </div>
 

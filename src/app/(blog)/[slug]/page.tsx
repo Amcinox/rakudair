@@ -12,7 +12,8 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { slug } = await params;
+    const { slug: rawSlug } = await params;
+    const slug = decodeURIComponent(rawSlug);
 
     // Guard against static file requests leaking into this route
     if (/\.[a-z0-9]+$/i.test(slug)) return { title: "Not Found" };
@@ -67,7 +68,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function StaticPage({ params }: Props) {
-    const { slug } = await params;
+    const { slug: rawSlug } = await params;
+    const slug = decodeURIComponent(rawSlug);
 
     // Guard against static file requests leaking into this route
     if (/\.[a-z0-9]+$/i.test(slug)) notFound();

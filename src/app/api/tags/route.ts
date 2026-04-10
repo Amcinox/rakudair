@@ -5,7 +5,7 @@ import { createTagSchema } from "@/lib/validations/tag";
 import { requireRole } from "@/lib/auth";
 import { apiRoute } from "@/lib/api-utils";
 import { asc, eq, count, sql } from "drizzle-orm";
-import slugify from "slugify";
+import { generateSlug } from "@/lib/slug";
 
 export const GET = apiRoute(async () => {
     const result = await db
@@ -38,8 +38,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
     }
 
     const data = parsed.data;
-    const slug =
-        data.slug || slugify(data.name, { lower: true, strict: true });
+    const slug = data.slug || generateSlug(data.name, "tag");
 
     const [tag] = await db
         .insert(tags)

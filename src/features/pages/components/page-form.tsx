@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import slugify from "slugify";
+import { generateSlug } from "@/lib/slug";
 import { Puck, usePuck, type Data } from "@puckeditor/core";
 import "@puckeditor/core/puck.css";
 import { puckConfig } from "@/features/puck/puck-config";
@@ -139,7 +139,7 @@ export function PageForm({ pageId, initialSlug, initialTitle }: PageFormProps) {
     // Auto-generate slug from title
     useEffect(() => {
         if (!slugTouched && title) {
-            setSlug(slugify(title, { lower: true, strict: true }));
+            setSlug(generateSlug(title));
         }
     }, [title, slugTouched]);
 
@@ -241,7 +241,7 @@ export function PageForm({ pageId, initialSlug, initialTitle }: PageFormProps) {
                                 value={slug}
                                 onChange={(e) => {
                                     setSlugTouched(true);
-                                    setSlug(slugify(e.target.value, { lower: true, strict: true }));
+                                    setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
                                 }}
                                 placeholder="auto-generated-slug"
                                 className="h-7 text-sm border-dashed border-border/50 bg-transparent"

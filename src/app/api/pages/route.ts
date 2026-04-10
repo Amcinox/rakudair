@@ -5,7 +5,7 @@ import { createPageSchema } from "@/lib/validations/page";
 import { requireRole } from "@/lib/auth";
 import { apiRoute } from "@/lib/api-utils";
 import { desc, asc, eq, ilike, count, and, SQL } from "drizzle-orm";
-import slugify from "slugify";
+import { generateSlug } from "@/lib/slug";
 
 export const GET = apiRoute(async (request: NextRequest) => {
     const { searchParams } = new URL(request.url);
@@ -59,7 +59,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
     }
 
     const data = parsed.data;
-    const slug = data.slug || slugify(data.title, { lower: true, strict: true });
+    const slug = data.slug || generateSlug(data.title, "page");
 
     const [pageItem] = await db
         .insert(pages)

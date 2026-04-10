@@ -5,7 +5,7 @@ import { updateArticleSchema } from "@/lib/validations/article";
 import { requireRole } from "@/lib/auth";
 import { apiRoute } from "@/lib/api-utils";
 import { eq } from "drizzle-orm";
-import slugify from "slugify";
+import { generateSlug } from "@/lib/slug";
 
 export const GET = apiRoute(async (_request: NextRequest,
     { params }: { params: Promise<{ id: string }> }) => {
@@ -50,7 +50,7 @@ export const PATCH = apiRoute(async (request: NextRequest,
 
     const data = parsed.data;
     if (data.title && !data.slug) {
-        data.slug = slugify(data.title, { lower: true, strict: true });
+        data.slug = generateSlug(data.title, "article");
     }
 
     const updateData: Record<string, unknown> = { ...data };
