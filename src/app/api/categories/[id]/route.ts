@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { categories } from "@/lib/db/schema";
@@ -24,7 +25,8 @@ export const PATCH = apiRoute(async (request: NextRequest,
 
     const data = parsed.data;
     if (data.name && !data.slug) {
-        data.slug = slugify(data.name, { lower: true, strict: true });
+        const generated = slugify(data.name, { lower: true, strict: true });
+        data.slug = generated || `category-${crypto.randomUUID().slice(0, 8)}`;
     }
 
     const [updated] = await db

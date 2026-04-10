@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getWebsiteConfig } from "@/lib/config/get-website-config";
 import { apiRoute } from "@/lib/api-utils";

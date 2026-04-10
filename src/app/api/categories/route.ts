@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { categories } from "@/lib/db/schema";
@@ -30,8 +31,8 @@ export const POST = apiRoute(async (request: NextRequest) => {
     }
 
     const data = parsed.data;
-    const slug =
-        data.slug || slugify(data.name, { lower: true, strict: true });
+    const generatedSlug = slugify(data.name, { lower: true, strict: true });
+    const slug = data.slug || generatedSlug || `category-${crypto.randomUUID().slice(0, 8)}`;
 
     const [category] = await db
         .insert(categories)
