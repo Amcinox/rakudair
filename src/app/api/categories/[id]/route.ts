@@ -6,7 +6,7 @@ import { updateCategorySchema } from "@/lib/validations/category";
 import { requireRole } from "@/lib/auth";
 import { apiRoute } from "@/lib/api-utils";
 import { eq } from "drizzle-orm";
-import slugify from "slugify";
+import { generateSlug } from "@/lib/slug";
 
 export const PATCH = apiRoute(async (request: NextRequest,
     { params }: { params: Promise<{ id: string }> }) => {
@@ -25,8 +25,7 @@ export const PATCH = apiRoute(async (request: NextRequest,
 
     const data = parsed.data;
     if (data.name && !data.slug) {
-        const generated = slugify(data.name, { lower: true, strict: true });
-        data.slug = generated || `category-${crypto.randomUUID().slice(0, 8)}`;
+        data.slug = generateSlug(data.name, "category");
     }
 
     const [updated] = await db

@@ -6,7 +6,7 @@ import { updateTagSchema } from "@/lib/validations/tag";
 import { requireRole } from "@/lib/auth";
 import { apiRoute } from "@/lib/api-utils";
 import { eq } from "drizzle-orm";
-import slugify from "slugify";
+import { generateSlug } from "@/lib/slug";
 
 export const PATCH = apiRoute(async (request: NextRequest,
     { params }: { params: Promise<{ id: string }> }) => {
@@ -25,7 +25,7 @@ export const PATCH = apiRoute(async (request: NextRequest,
 
     const data = parsed.data;
     if (data.name && !data.slug) {
-        data.slug = slugify(data.name, { lower: true, strict: true });
+        data.slug = generateSlug(data.name, "tag");
     }
 
     const [updated] = await db

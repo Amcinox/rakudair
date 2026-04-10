@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import slugify from "slugify";
+import { generateSlug } from "@/lib/slug";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -136,7 +136,7 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
     // Auto-generate slug from title
     useEffect(() => {
         if (!slugTouched && title) {
-            setSlug(slugify(title, { lower: true, strict: true }));
+            setSlug(generateSlug(title));
         }
     }, [title, slugTouched]);
 
@@ -303,7 +303,7 @@ export function ArticleForm({ articleId }: ArticleFormProps) {
                                 value={slug}
                                 onChange={(e) => {
                                     setSlugTouched(true);
-                                    setSlug(slugify(e.target.value, { lower: true, strict: true }));
+                                    setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
                                 }}
                                 placeholder="auto-generated-slug"
                                 className="h-7 text-sm border-dashed border-border/50 bg-transparent"

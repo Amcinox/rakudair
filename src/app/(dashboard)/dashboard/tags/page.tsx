@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { generateSlug } from "@/lib/slug";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +29,8 @@ export default function TagsPage() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editing, setEditing] = useState<Tag | null>(null);
     const [name, setName] = useState("");
+    const [slug, setSlug] = useState("");
+    const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 
     const { tags, loading, create, update, remove } = useTags();
     const [ConfirmDialog, confirm] = useConfirm({
@@ -40,12 +43,16 @@ export default function TagsPage() {
     function openCreate() {
         setEditing(null);
         setName("");
+        setSlug("");
+        setSlugManuallyEdited(false);
         setDialogOpen(true);
     }
 
     function openEdit(tag: Tag) {
         setEditing(tag);
         setName(tag.name);
+        setSlug(tag.slug ?? "");
+        setSlugManuallyEdited(true);
         setDialogOpen(true);
     }
 
@@ -53,9 +60,9 @@ export default function TagsPage() {
         e.preventDefault();
         try {
             if (editing) {
-                await update(editing.id, { name });
+                await update(editing.id, { name, slug: slug || undefined });
             } else {
-                await create({ name });
+                await create({ name, slug: slug || undefined });
             }
             setDialogOpen(false);
         } catch {
@@ -99,10 +106,28 @@ export default function TagsPage() {
                                     <Input
                                         id="tagName"
                                         value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        placeholder="e.g. cherry-blossoms"
+                                        onChange={(e) => {
+                                            const n = e.target.value;
+                                            setName(n);
+                                            if (!slugManuallyEdited) setSlug(generateSlug(n, "tag"));
+                                        }}
+                                        placeholder="e.g. 桜"
                                         required
                                     />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="tagSlug">Slug</Label>
+                                    <Input
+                                        id="tagSlug"
+                                        value={slug}
+                                        onChange={(e) => {
+                                            setSlugManuallyEdited(true);
+                                            setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
+                                        }}
+                                        placeholder="auto-generated"
+                                        className="font-mono text-sm"
+                                    />
+                                    <p className="text-xs text-muted-foreground">Leave blank to auto-generate from name</p>
                                 </div>
                                 <div className="flex justify-end gap-2">
                                     <Button

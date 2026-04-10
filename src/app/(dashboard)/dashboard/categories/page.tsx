@@ -28,7 +28,7 @@ import {
     Trophy, Flag, Map, Landmark, TreePine, Flower, Bird, Fish, Dog, Cat, type LucideIcon,
 } from "lucide-react";
 import { useConfirm } from "@/hooks/use-confirm";
-import slugify from "slugify";
+import { generateSlug } from "@/lib/slug";
 import { useCategories, type Category } from "@/features/categories/hooks/useCategories";
 
 const ICON_OPTIONS: { name: string; Icon: LucideIcon }[] = [
@@ -199,7 +199,7 @@ export default function CategoriesPage() {
                                             const name = e.target.value;
                                             const autoSlug = slugManuallyEdited
                                                 ? form.slug
-                                                : slugify(name, { lower: true, strict: true });
+                                                : generateSlug(name, "category");
                                             setForm({ ...form, name, slug: autoSlug });
                                         }}
                                         placeholder="e.g. City Guides"
