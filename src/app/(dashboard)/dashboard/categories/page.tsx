@@ -161,7 +161,7 @@ export default function CategoriesPage() {
                         <DialogTrigger asChild>
                             <Button onClick={openCreate} className="btn-gold">Add Category</Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-lg">
+                        <DialogContent className="sm:max-w-lg max-h-[90dvh] overflow-y-auto">
                             <DialogHeader>
                                 <DialogTitle>
                                     {editing ? "Edit Category" : "New Category"}
@@ -232,7 +232,7 @@ export default function CategoriesPage() {
                                         }
                                         placeholder="Optional description"
                                         rows={2}
-                                        className="w-full max-w-full resize-none"
+                                        className="w-full max-w-full resize-none max-h-32 overflow-y-auto"
                                     />
                                 </div>
 
