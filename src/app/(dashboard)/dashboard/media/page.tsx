@@ -18,6 +18,9 @@ import type { OurFileRouter } from "@/lib/uploadthing";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useMedia, type MediaItem } from "@/features/media/hooks/useMedia";
 import { apiFetch } from "@/features/shared/api";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { blurFacesInFile } from "@/lib/face-blur";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
@@ -27,6 +30,8 @@ export default function MediaPage() {
     const [dragActive, setDragActive] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [processing, setProcessing] = useState(false);
+    const [blurFaces, setBlurFaces] = useState(true);
     const [search, setSearch] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,7 +55,13 @@ export default function MediaPage() {
         setUploadProgress(0);
 
         try {
-            const result = await startUpload(files);
+            let toUpload = files;
+            if (blurFaces) {
+                setProcessing(true);
+                toUpload = await Promise.all(files.map(blurFacesInFile));
+                setProcessing(false);
+            }
+            const result = await startUpload(toUpload);
             if (result) {
                 for (const file of result) {
                     await apiFetch("/api/media", {
@@ -69,6 +80,7 @@ export default function MediaPage() {
                 setUploadOpen(false);
             }
         } catch (error) {
+            setProcessing(false);
             toast.error(error instanceof Error ? error.message : "Upload failed");
         } finally {
             setUploading(false);
@@ -217,6 +229,16 @@ export default function MediaPage() {
                         <DialogHeader>
                             <DialogTitle>Upload Files</DialogTitle>
                         </DialogHeader>
+                        <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                            <Label htmlFor="media-blur-faces" className="text-sm font-medium cursor-pointer select-none">
+                                Blur faces
+                            </Label>
+                            <Switch
+                                id="media-blur-faces"
+                                checked={blurFaces}
+                                onCheckedChange={setBlurFaces}
+                            />
+                        </div>
                         <div
                             onDragOver={handleDragOver}
                             onDragLeave={handleDragLeave}
@@ -239,15 +261,21 @@ export default function MediaPage() {
                                 onChange={handleFileChange}
                                 className="hidden"
                             />
-                            {uploading ? (
+                            {uploading || processing ? (
                                 <div className="text-center space-y-3">
-                                    <div className="h-2 w-48 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
-                                        <div
-                                            className="h-full bg-primary rounded-full transition-all duration-300"
-                                            style={{ width: `${uploadProgress}%` }}
-                                        />
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">Uploading… {uploadProgress}%</p>
+                                    {processing ? (
+                                        <p className="text-sm text-muted-foreground">Detecting faces…</p>
+                                    ) : (
+                                        <>
+                                            <div className="h-2 w-48 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+                                                <div
+                                                    className="h-full bg-primary rounded-full transition-all duration-300"
+                                                    style={{ width: `${uploadProgress}%` }}
+                                                />
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">Uploading… {uploadProgress}%</p>
+                                        </>
+                                    )}
                                 </div>
                             ) : (
                                 <>
