@@ -10,6 +10,7 @@ import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/lib/uploadthing";
 import { blurFacesInFile } from "@/lib/face-blur";
 import { ImagePlus, X } from "lucide-react";
+import { BlurReviewDialog, type BlurPreviewItem } from "@/components/dashboard/blur-review-dialog";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
@@ -34,8 +35,8 @@ export function ImagePicker({ value, onChange, placeholder = "Image URL" }: Imag
     const [progress, setProgress] = useState(0);
     const [blurFaces, setBlurFaces] = useState(true);
     const [processing, setProcessing] = useState(false);
-    // preview state: original URL for before, processed File + object URL for after
-    const [blurPreview, setBlurPreview] = useState<{ originalUrl: string; processedObjectUrl: string; processedFile: File } | null>(null);
+    // preview state: array of { original / processed } per file
+    const [blurPreviews, setBlurPreviews] = useState<BlurPreviewItem[] | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
 
     // Assets state
@@ -82,22 +83,28 @@ export function ImagePicker({ value, onChange, placeholder = "Image URL" }: Imag
 
     const processAndPreview = async (files: File[]) => {
         if (!files.length) return;
-        const file = files[0];
         if (blurFaces) {
             setProcessing(true);
             try {
-                const processed = await blurFacesInFile(file);
-                const originalUrl = URL.createObjectURL(file);
-                const processedObjectUrl = URL.createObjectURL(processed);
-                setBlurPreview({ originalUrl, processedObjectUrl, processedFile: processed });
+                const previews = await Promise.all(
+                    files.map(async (file) => {
+                        const processed = await blurFacesInFile(file);
+                        return {
+                            originalUrl: URL.createObjectURL(file),
+                            processedObjectUrl: URL.createObjectURL(processed),
+                            processedFile: processed,
+                        };
+                    }),
+                );
+                setBlurPreviews(previews);
             } catch {
                 // fallback: upload without blurring
-                await startUploadFiles([file]);
+                await startUploadFiles(files);
             } finally {
                 setProcessing(false);
             }
         } else {
-            await startUploadFiles([file]);
+            await startUploadFiles(files);
         }
     };
 
@@ -110,7 +117,7 @@ export function ImagePicker({ value, onChange, placeholder = "Image URL" }: Imag
                 const uploadedUrl = res[0].ufsUrl ?? res[0].url;
                 onChange(uploadedUrl);
                 setMode("closed");
-                setBlurPreview(null);
+                setBlurPreviews(null);
             }
         } catch {
             // upload failed silently
@@ -119,19 +126,22 @@ export function ImagePicker({ value, onChange, placeholder = "Image URL" }: Imag
         }
     };
 
-    const confirmBlurUpload = () => {
-        if (!blurPreview) return;
-        URL.revokeObjectURL(blurPreview.originalUrl);
-        URL.revokeObjectURL(blurPreview.processedObjectUrl);
-        startUploadFiles([blurPreview.processedFile]);
+    const confirmBlurUpload = (items: BlurPreviewItem[]) => {
+        items.forEach((p) => {
+            URL.revokeObjectURL(p.originalUrl);
+            URL.revokeObjectURL(p.processedObjectUrl);
+        });
+        startUploadFiles(items.map((p) => p.processedFile));
     };
 
     const cancelBlurPreview = () => {
-        if (blurPreview) {
-            URL.revokeObjectURL(blurPreview.originalUrl);
-            URL.revokeObjectURL(blurPreview.processedObjectUrl);
+        if (blurPreviews) {
+            blurPreviews.forEach((p) => {
+                URL.revokeObjectURL(p.originalUrl);
+                URL.revokeObjectURL(p.processedObjectUrl);
+            });
         }
-        setBlurPreview(null);
+        setBlurPreviews(null);
     };
 
     const handleDrop = (e: DragEvent) => {
@@ -231,84 +241,63 @@ export function ImagePicker({ value, onChange, placeholder = "Image URL" }: Imag
                         />
                     </div>
 
-                    {/* Blur preview confirm */}
-                    {blurPreview && (
-                        <div className="space-y-2">
-                            <p className="text-[11px] font-medium text-foreground">Review before uploading</p>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="space-y-1">
-                                    <p className="text-[10px] text-muted-foreground text-center">Original</p>
-                                    <div className="relative aspect-square overflow-hidden rounded-md border bg-muted">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={blurPreview.originalUrl} alt="Original" className="w-full h-full object-cover" />
-                                    </div>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] text-muted-foreground text-center">Faces blurred</p>
-                                    <div className="relative aspect-square overflow-hidden rounded-md border bg-muted">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={blurPreview.processedObjectUrl} alt="Blurred" className="w-full h-full object-cover" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex gap-1.5">
-                                <Button type="button" size="sm" className="flex-1 h-7 text-xs" onClick={confirmBlurUpload} disabled={uploading}>
-                                    {uploading ? `Uploading… ${progress}%` : "Upload"}
-                                </Button>
-                                <Button type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={cancelBlurPreview} disabled={uploading}>
-                                    Cancel
-                                </Button>
-                            </div>
-                        </div>
-                    )}
+                    {/* Blur review dialog */}
+                    <BlurReviewDialog
+                        open={!!blurPreviews}
+                        previews={blurPreviews ?? []}
+                        uploading={uploading}
+                        progress={progress}
+                        onConfirm={confirmBlurUpload}
+                        onDiscard={cancelBlurPreview}
+                    />
 
-                    {!blurPreview && (
-                        <div
-                            onDragOver={(e) => {
-                                e.preventDefault();
-                                setDragActive(true);
-                            }}
-                            onDragLeave={() => setDragActive(false)}
-                            onDrop={handleDrop}
-                            onClick={() => fileRef.current?.click()}
-                            className={`relative flex min-h-[100px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors ${dragActive
-                                ? "border-primary bg-primary/5"
-                                : "border-border hover:border-primary/50"
-                                }`}
-                        >
-                            {processing ? (
-                                <div className="flex flex-col items-center gap-2">
-                                    <span className="text-[10px] text-muted-foreground">Detecting faces…</span>
+                    {/* Drop zone — always visible (dialog overlays) */}
+                    <div
+                        onDragOver={(e) => {
+                            e.preventDefault();
+                            setDragActive(true);
+                        }}
+                        onDragLeave={() => setDragActive(false)}
+                        onDrop={handleDrop}
+                        onClick={() => fileRef.current?.click()}
+                        className={`relative flex min-h-[100px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors ${dragActive
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                            }`}
+                    >
+                        {processing ? (
+                            <div className="flex flex-col items-center gap-2">
+                                <span className="text-[10px] text-muted-foreground">Detecting faces…</span>
+                            </div>
+                        ) : uploading ? (
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+                                    <div
+                                        className="h-full rounded-full bg-primary transition-all"
+                                        style={{ width: `${progress}%` }}
+                                    />
                                 </div>
-                            ) : uploading ? (
-                                <div className="flex flex-col items-center gap-2">
-                                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
-                                        <div
-                                            className="h-full rounded-full bg-primary transition-all"
-                                            style={{ width: `${progress}%` }}
-                                        />
-                                    </div>
-                                    <span className="text-[10px] text-muted-foreground">
-                                        Uploading… {progress}%
-                                    </span>
-                                </div>
-                            ) : (
-                                <>
-                                    <span className="text-lg mb-1">📷</span>
-                                    <span className="text-[10px] text-muted-foreground">
-                                        Drop or click to upload
-                                    </span>
-                                </>
-                            )}
-                            <input
-                                ref={fileRef}
-                                type="file"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                className="hidden"
-                            />
-                        </div>
-                    )}
+                                <span className="text-[10px] text-muted-foreground">
+                                    Uploading… {progress}%
+                                </span>
+                            </div>
+                        ) : (
+                            <>
+                                <span className="text-lg mb-1">📷</span>
+                                <span className="text-[10px] text-muted-foreground">
+                                    Drop or click to upload
+                                </span>
+                            </>
+                        )}
+                        <input
+                            ref={fileRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleFileChange}
+                            className="hidden"
+                        />
+                    </div>
                 </div>
             )}
 

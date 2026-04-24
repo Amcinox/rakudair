@@ -60,7 +60,7 @@ export async function blurFacesInFile(file: File): Promise<File> {
     try {
         const results = await faceapi.detectAllFaces(
             canvas,
-            new faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 }),
+            new faceapi.SsdMobilenetv1Options({ minConfidence: 0.2 }),
         );
         detections = results;
     } catch (err) {
@@ -74,7 +74,10 @@ export async function blurFacesInFile(file: File): Promise<File> {
 
     for (const detection of detections) {
         const { x, y, width, height } = detection.box;
-        pixelateRegion(ctx, x, y, width, height);
+        // Expand box by 25% on each side to catch partial/cut-off faces
+        const padX = width * 0.25;
+        const padY = height * 0.25;
+        pixelateRegion(ctx, x - padX, y - padY, width + padX * 2, height + padY * 2);
     }
 
     return new Promise<File>((resolve, reject) => {

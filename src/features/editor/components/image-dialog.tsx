@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/lib/uploadthing";
 import { blurFacesInFile } from "@/lib/face-blur";
+import { BlurReviewDialog, type BlurPreviewItem } from "@/components/dashboard/blur-review-dialog";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
@@ -44,7 +45,7 @@ export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) 
     const [processing, setProcessing] = useState(false);
     const [blurFaces, setBlurFaces] = useState(true);
     const [progress, setProgress] = useState(0);
-    const [blurPreview, setBlurPreview] = useState<{ originalUrl: string; processedObjectUrl: string; processedFile: File } | null>(null);
+    const [blurPreviews, setBlurPreviews] = useState<BlurPreviewItem[] | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
 
     // Assets state
@@ -68,12 +69,14 @@ export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) 
         setDragActive(false);
         setSelectedAsset(null);
         setAssetsSearch("");
-        if (blurPreview) {
-            URL.revokeObjectURL(blurPreview.originalUrl);
-            URL.revokeObjectURL(blurPreview.processedObjectUrl);
+        if (blurPreviews) {
+            blurPreviews.forEach((p) => {
+                URL.revokeObjectURL(p.originalUrl);
+                URL.revokeObjectURL(p.processedObjectUrl);
+            });
         }
-        setBlurPreview(null);
-    }, [blurPreview]);
+        setBlurPreviews(null);
+    }, [blurPreviews]);
 
     const handleOpenChange = (v: boolean) => {
         if (!v) reset();
@@ -115,7 +118,7 @@ export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) 
                 setPreview(uploadedUrl);
                 setUrl(uploadedUrl);
                 setTab("url");
-                setBlurPreview(null);
+                setBlurPreviews(null);
             }
         } catch {
             // upload failed silently
@@ -126,37 +129,46 @@ export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) 
 
     const processAndPreview = async (files: File[]) => {
         if (!files.length) return;
-        const file = files[0];
         if (blurFaces) {
             setProcessing(true);
             try {
-                const processed = await blurFacesInFile(file);
-                const originalUrl = URL.createObjectURL(file);
-                const processedObjectUrl = URL.createObjectURL(processed);
-                setBlurPreview({ originalUrl, processedObjectUrl, processedFile: processed });
+                const previews = await Promise.all(
+                    files.map(async (file) => {
+                        const processed = await blurFacesInFile(file);
+                        return {
+                            originalUrl: URL.createObjectURL(file),
+                            processedObjectUrl: URL.createObjectURL(processed),
+                            processedFile: processed,
+                        };
+                    }),
+                );
+                setBlurPreviews(previews);
             } catch {
-                await upload([file]);
+                await upload(files);
             } finally {
                 setProcessing(false);
             }
         } else {
-            await upload([file]);
+            await upload(files);
         }
     };
 
-    const confirmBlurUpload = () => {
-        if (!blurPreview) return;
-        URL.revokeObjectURL(blurPreview.originalUrl);
-        URL.revokeObjectURL(blurPreview.processedObjectUrl);
-        upload([blurPreview.processedFile]);
+    const confirmBlurUpload = (items: BlurPreviewItem[]) => {
+        items.forEach((p) => {
+            URL.revokeObjectURL(p.originalUrl);
+            URL.revokeObjectURL(p.processedObjectUrl);
+        });
+        upload(items.map((p) => p.processedFile));
     };
 
     const cancelBlurPreview = () => {
-        if (blurPreview) {
-            URL.revokeObjectURL(blurPreview.originalUrl);
-            URL.revokeObjectURL(blurPreview.processedObjectUrl);
+        if (blurPreviews) {
+            blurPreviews.forEach((p) => {
+                URL.revokeObjectURL(p.originalUrl);
+                URL.revokeObjectURL(p.processedObjectUrl);
+            });
         }
-        setBlurPreview(null);
+        setBlurPreviews(null);
     };
 
     const handleDrop = (e: DragEvent) => {
@@ -220,6 +232,16 @@ export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) 
 
                 {tab === "upload" && (
                     <div className="space-y-3">
+                        {/* Blur review dialog (portal) */}
+                        <BlurReviewDialog
+                            open={!!blurPreviews}
+                            previews={blurPreviews ?? []}
+                            uploading={uploading}
+                            progress={progress}
+                            onConfirm={confirmBlurUpload}
+                            onDiscard={cancelBlurPreview}
+                        />
+
                         <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
                             <Label htmlFor="id-blur-faces" className="text-xs font-medium cursor-pointer select-none">
                                 Blur faces
@@ -232,79 +254,55 @@ export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) 
                             />
                         </div>
 
-                        {/* Blur preview confirm */}
-                        {blurPreview && (
-                            <div className="space-y-2">
-                                <p className="text-xs font-medium text-foreground">Review before uploading</p>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] text-muted-foreground text-center">Original</p>
-                                        <div className="relative aspect-square overflow-hidden rounded-md border bg-muted">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={blurPreview.originalUrl} alt="Original" className="w-full h-full object-cover" />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] text-muted-foreground text-center">Faces blurred</p>
-                                        <div className="relative aspect-square overflow-hidden rounded-md border bg-muted">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={blurPreview.processedObjectUrl} alt="Blurred" className="w-full h-full object-cover" />
-                                        </div>
-                                    </div>
+                        <div
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                setDragActive(true);
+                            }}
+                            onDragLeave={() => setDragActive(false)}
+                            onDrop={handleDrop}
+                            onClick={() => fileRef.current?.click()}
+                            className={`relative flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors ${dragActive
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-primary/50"
+                                }`}
+                        >
+                            {processing ? (
+                                <div className="flex flex-col items-center gap-2">
+                                    <span className="text-xs text-muted-foreground">Detecting faces…</span>
                                 </div>
-                            </div>
-                        )}
-
-                        {!blurPreview && (
-                            <div
-                                onDragOver={(e) => {
-                                    e.preventDefault();
-                                    setDragActive(true);
-                                }}
-                                onDragLeave={() => setDragActive(false)}
-                                onDrop={handleDrop}
-                                onClick={() => fileRef.current?.click()}
-                                className={`relative flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors ${dragActive
-                                    ? "border-primary bg-primary/5"
-                                    : "border-border hover:border-primary/50"
-                                    }`}
-                            >
-                                {processing ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <span className="text-xs text-muted-foreground">Detecting faces…</span>
+                            ) : uploading ? (
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="h-1.5 w-32 overflow-hidden rounded-full bg-muted">
+                                        <div
+                                            className="h-full rounded-full bg-primary transition-all"
+                                            style={{ width: `${progress}%` }}
+                                        />
                                     </div>
-                                ) : uploading ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="h-1.5 w-32 overflow-hidden rounded-full bg-muted">
-                                            <div
-                                                className="h-full rounded-full bg-primary transition-all"
-                                                style={{ width: `${progress}%` }}
-                                            />
-                                        </div>
-                                        <span className="text-xs text-muted-foreground">
-                                            Uploading… {progress}%
-                                        </span>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <span className="text-2xl mb-2">📷</span>
-                                        <span className="text-xs text-muted-foreground">
-                                            Drop an image here or click to browse
-                                        </span>
-                                        <span className="text-[10px] text-muted-foreground/70 mt-1">
-                                            Max 8 MB · JPG, PNG, GIF, WebP
-                                        </span>
-                                    </>
-                                )}
-                                <input
-                                    ref={fileRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                    className="hidden"
-                                />
-                            </div>
-                        )}
+                                    <span className="text-xs text-muted-foreground">
+                                        Uploading… {progress}%
+                                    </span>
+                                </div>
+                            ) : (
+                                <>
+                                    <span className="text-2xl mb-2">📷</span>
+                                    <span className="text-xs text-muted-foreground">
+                                        Drop an image here or click to browse
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground/70 mt-1">
+                                        Max 8 MB · JPG, PNG, GIF, WebP
+                                    </span>
+                                </>
+                            )}
+                            <input
+                                ref={fileRef}
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
+                        </div>
                     </div>
                 )}
 
@@ -400,31 +398,18 @@ export function ImageDialog({ open, onOpenChange, onInsert }: ImageDialogProps) 
                 )}
 
                 <DialogFooter>
-                    {blurPreview && tab === "upload" ? (
-                        <>
-                            <Button variant="outline" onClick={cancelBlurPreview} disabled={uploading}>
-                                Discard
-                            </Button>
-                            <Button onClick={confirmBlurUpload} disabled={uploading}>
-                                {uploading ? `Uploading… ${progress}%` : "Upload blurred"}
-                            </Button>
-                        </>
-                    ) : (
-                        <>
-                            <Button
-                                variant="outline"
-                                onClick={() => handleOpenChange(false)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleInsert}
-                                disabled={(!url.trim() && !selectedAsset) || uploading}
-                            >
-                                Insert Image
-                            </Button>
-                        </>
-                    )}
+                    <Button
+                        variant="outline"
+                        onClick={() => handleOpenChange(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleInsert}
+                        disabled={(!url.trim() && !selectedAsset) || uploading}
+                    >
+                        Insert Image
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
