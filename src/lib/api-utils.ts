@@ -15,6 +15,10 @@ export function apiRoute(handler: Handler): Handler {
         try {
             return await handler(req, ctx);
         } catch (error) {
+            // Re-throw Next.js internal signals (prerender abort, connection() bail-out, etc.)
+            if (error !== null && typeof error === "object" && "digest" in error) {
+                throw error;
+            }
             const message =
                 error instanceof Error ? error.message : "Internal server error";
 

@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, type DragEvent } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { generateReactHelpers } from "@uploadthing/react";
-import type { OurFileRouter } from "@/lib/uploadthing";
 import { ImagePlus, X } from "lucide-react";
 
-const { useUploadThing } = generateReactHelpers<OurFileRouter>();
+const ImageUploader = dynamic(() => import("./image-uploader"), { ssr: false });
 
 type MediaItem = {
     id: string;
@@ -26,23 +25,14 @@ interface ImagePickerProps {
 
 export function ImagePicker({ value, onChange, placeholder = "Image URL" }: ImagePickerProps) {
     const [mode, setMode] = useState<"closed" | "upload" | "assets" | "url">("closed");
-    const [dragActive, setDragActive] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const fileRef = useRef<HTMLInputElement>(null);
 
     // Assets state
     const [assets, setAssets] = useState<MediaItem[]>([]);
     const [assetsLoading, setAssetsLoading] = useState(false);
     const [assetsSearch, setAssetsSearch] = useState("");
-    const [selectedAsset, setSelectedAsset] = useState<MediaItem | null>(null);
 
     // URL state
     const [urlInput, setUrlInput] = useState(value);
-
-    const { startUpload } = useUploadThing("imageUploader", {
-        onUploadProgress: (p) => setProgress(p),
-    });
 
     // Sync urlInput with external value
     useEffect(() => {
@@ -73,40 +63,7 @@ export function ImagePicker({ value, onChange, placeholder = "Image URL" }: Imag
         )
         : assets;
 
-    const upload = async (files: File[]) => {
-        if (!files.length) return;
-        setUploading(true);
-        setProgress(0);
-        try {
-            const res = await startUpload(files);
-            if (res?.[0]) {
-                const uploadedUrl = res[0].ufsUrl ?? res[0].url;
-                onChange(uploadedUrl);
-                setMode("closed");
-            }
-        } catch {
-            // upload failed silently
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    const handleDrop = (e: DragEvent) => {
-        e.preventDefault();
-        setDragActive(false);
-        const files = Array.from(e.dataTransfer.files).filter((f) =>
-            f.type.startsWith("image/"),
-        );
-        upload(files);
-    };
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files ?? []);
-        upload(files);
-    };
-
     const selectAsset = (asset: MediaItem) => {
-        setSelectedAsset(asset);
         onChange(asset.url);
         setMode("closed");
     };
@@ -118,7 +75,6 @@ export function ImagePicker({ value, onChange, placeholder = "Image URL" }: Imag
 
     const handleClear = useCallback(() => {
         onChange("");
-        setSelectedAsset(null);
         setUrlInput("");
     }, [onChange]);
 
@@ -175,47 +131,12 @@ export function ImagePicker({ value, onChange, placeholder = "Image URL" }: Imag
 
             {/* Upload panel */}
             {mode === "upload" && (
-                <div
-                    onDragOver={(e) => {
-                        e.preventDefault();
-                        setDragActive(true);
+                <ImageUploader
+                    onUploadComplete={(url) => {
+                        onChange(url);
+                        setMode("closed");
                     }}
-                    onDragLeave={() => setDragActive(false)}
-                    onDrop={handleDrop}
-                    onClick={() => fileRef.current?.click()}
-                    className={`relative flex min-h-[100px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors ${dragActive
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
-                        }`}
-                >
-                    {uploading ? (
-                        <div className="flex flex-col items-center gap-2">
-                            <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
-                                <div
-                                    className="h-full rounded-full bg-primary transition-all"
-                                    style={{ width: `${progress}%` }}
-                                />
-                            </div>
-                            <span className="text-[10px] text-muted-foreground">
-                                Uploading… {progress}%
-                            </span>
-                        </div>
-                    ) : (
-                        <>
-                            <span className="text-lg mb-1">📷</span>
-                            <span className="text-[10px] text-muted-foreground">
-                                Drop or click to upload
-                            </span>
-                        </>
-                    )}
-                    <input
-                        ref={fileRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden"
-                    />
-                </div>
+                />
             )}
 
             {/* Assets panel */}
