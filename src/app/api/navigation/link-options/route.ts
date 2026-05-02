@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { pages, articles, categories } from "@/lib/db/schema";
 import { apiRoute } from "@/lib/api-utils";
 import { eq, asc, desc } from "drizzle-orm";
 
 export const GET = apiRoute(async () => {
+    await connection();
     const [pageList, articleList, categoryList] = await Promise.all([
         db
             .select({
