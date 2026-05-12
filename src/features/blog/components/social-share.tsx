@@ -170,9 +170,13 @@ interface SocialShareProps {
     title: string;
     slug?: string;
     url?: string;
+    /** Render only the sticky desktop sidebar (suppresses the mobile bar) */
+    desktopOnly?: boolean;
+    /** Render only the mobile inline bar (suppresses the desktop sidebar) */
+    mobileOnly?: boolean;
 }
 
-export function SocialShare({ title, slug = "", url }: SocialShareProps) {
+export function SocialShare({ title, slug = "", url, desktopOnly, mobileOnly }: SocialShareProps) {
     const shareUrl =
         url ?? (typeof window !== "undefined" ? window.location.href : "");
 
@@ -260,14 +264,18 @@ export function SocialShare({ title, slug = "", url }: SocialShareProps) {
     return (
         <>
             {/* Desktop sticky sidebar */}
-            <aside className="hidden lg:flex flex-col gap-3 sticky top-28 h-fit">
-                <ActionButtons {...sharedProps} />
-            </aside>
+            {!mobileOnly && (
+                <aside className="hidden lg:flex flex-col gap-3 sticky top-28 h-fit">
+                    <ActionButtons {...sharedProps} />
+                </aside>
+            )}
 
             {/* Mobile inline bar */}
-            <div className="lg:hidden flex items-center justify-center gap-3 mt-12 pt-8 border-t border-border flex-wrap">
-                <ActionButtons {...sharedProps} mobile />
-            </div>
+            {!desktopOnly && (
+                <div className="lg:hidden flex items-center justify-center gap-3 mt-12 pt-8 border-t border-border flex-wrap">
+                    <ActionButtons {...sharedProps} mobile />
+                </div>
+            )}
         </>
     );
 }
