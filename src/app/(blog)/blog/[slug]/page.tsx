@@ -300,7 +300,8 @@ export default async function ArticlePage({ params }: Props) {
                                 </span>
                             </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+                        {/* bottom-heavy gradient so text is always readable over any cover image */}
+                        <div className="absolute inset-0 bg-linear-to-t from-background via-background/75 to-background/20" />
                     </div>
 
                     <div className="absolute bottom-0 left-0 right-0">
@@ -319,7 +320,7 @@ export default async function ArticlePage({ params }: Props) {
                                 </span>
                             )}
 
-                            <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 text-balance">
+                            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 text-balance">
                                 {article.title}
                             </h1>
 
@@ -370,8 +371,8 @@ export default async function ArticlePage({ params }: Props) {
                 <section className="py-12 md:py-16">
                     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex gap-10">
-                            {/* Social Share Sidebar */}
-                            <SocialShare title={article.title} slug={article.slug} />
+                            {/* Desktop sticky sidebar — hidden on mobile so it doesn't create a flex column */}
+                            <SocialShare title={article.title} slug={article.slug} desktopOnly />
 
                             {/* Main Content */}
                             <article className="flex-1 min-w-0">
@@ -395,6 +396,9 @@ export default async function ArticlePage({ params }: Props) {
                                         ))}
                                     </div>
                                 )}
+
+                                {/* Mobile share bar — placed here so it's inside the article column */}
+                                <SocialShare title={article.title} slug={article.slug} mobileOnly />
 
                                 {/* Inline Author Box (mobile) */}
                                 <div className="lg:hidden">
