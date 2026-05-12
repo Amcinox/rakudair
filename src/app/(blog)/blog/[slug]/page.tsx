@@ -282,9 +282,13 @@ export default async function ArticlePage({ params }: Props) {
                     </div>
                 )}
 
-                {/* Hero Section */}
-                <section className="relative pt-20">
-                    <div className="relative h-[50vh] md:h-[70vh]">
+                {/* Hero Section
+                     Layout: cover image is absolute (fills whatever height the section grows to).
+                     Text is in normal flow so the section expands to fit long titles on mobile,
+                     guaranteeing the content never scrolls behind the fixed header. */}
+                <section className="relative pt-16 md:pt-20">
+                    {/* Background: image + gradient, stretches with section */}
+                    <div className="absolute inset-0">
                         {article.coverImage ? (
                             <Image
                                 src={article.coverImage}
@@ -294,32 +298,18 @@ export default async function ArticlePage({ params }: Props) {
                                 priority
                             />
                         ) : (
-                            <div className="absolute inset-0 bg-secondary flex items-center justify-center">
+                            <div className="w-full h-full bg-secondary flex items-center justify-center">
                                 <span className="text-[12rem] text-muted-foreground/20">
                                     旅
                                 </span>
                             </div>
                         )}
-                        {/* bottom-heavy gradient so text is always readable over any cover image */}
                         <div className="absolute inset-0 bg-linear-to-t from-background via-background/75 to-background/20" />
                     </div>
 
-                    <div className="absolute bottom-0 left-0 right-0">
-                        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 md:pb-12">
-                            <Link
-                                href="/blog"
-                                className="inline-flex items-center gap-2 text-foreground/80 hover:text-primary mb-6 transition-colors"
-                            >
-                                <ArrowLeft className="w-5 h-5" />
-                                <span>ブログに戻る</span>
-                            </Link>
-
-                            {article.categoryName && (
-                                <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-                                    {article.categoryName}
-                                </span>
-                            )}
-
+                    {/* Text: natural flow, min-height keeps enough image visible above the copy */}
+                    <div className="relative z-10 min-h-[45vh] md:min-h-[65vh] flex flex-col justify-end">
+                        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 md:pb-12 w-full">
                             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 text-balance">
                                 {article.title}
                             </h1>
@@ -366,6 +356,25 @@ export default async function ArticlePage({ params }: Props) {
                         </div>
                     </div>
                 </section>
+
+                {/* Breadcrumb — back link + category, below the hero */}
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center gap-3 flex-wrap">
+                    <Link
+                        href="/blog"
+                        className="inline-flex items-center gap-1.5 text-sm text-foreground/60 hover:text-primary transition-colors"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span>ブログに戻る</span>
+                    </Link>
+                    {article.categoryName && (
+                        <>
+                            <span className="text-foreground/30 text-sm">/</span>
+                            <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                                {article.categoryName}
+                            </span>
+                        </>
+                    )}
+                </div>
 
                 {/* Article Content */}
                 <section className="py-12 md:py-16">
